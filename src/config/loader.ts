@@ -1,24 +1,59 @@
 import { parse } from "smol-toml";
-import { readFileSync, existsSync } from "node:fs";
+import { readFileSync, writeFileSync, existsSync, mkdirSync } from "node:fs";
 import { homedir } from "node:os";
-import { join } from "node:path";
+import { join, dirname } from "node:path";
 import type { Config, FeedConfig } from "./types.js";
 
-const CONFIG_DIR = join(homedir(), ".config", "tread");
+function getConfigDir(): string {
+	const xdgConfig = process.env["XDG_CONFIG_HOME"];
+	if (xdgConfig) {
+		return join(xdgConfig, "tread");
+	}
+	return join(homedir(), ".config", "tread");
+}
+
+const CONFIG_DIR = getConfigDir();
 const CONFIG_PATH = join(CONFIG_DIR, "config.toml");
+
+const SAMPLE_CONFIG = `# Tread RSS Reader Configuration
+# Add your feeds below. Each feed needs a name and url.
+
+[[feeds]]
+name = "Hacker News"
+url = "https://hnrss.org/frontpage"
+
+[[feeds]]
+name = "Lobsters"
+url = "https://lobste.rs/rss"
+
+[[feeds]]
+name = "TechCrunch"
+url = "https://techcrunch.com/feed/"
+`;
 
 export function getConfigPath(): string {
 	return CONFIG_PATH;
 }
 
+export function configExists(): boolean {
+	return existsSync(CONFIG_PATH);
+}
+
+export function initConfig(): { created: boolean; path: string } {
+	if (existsSync(CONFIG_PATH)) {
+		return { created: false, path: CONFIG_PATH };
+	}
+
+	mkdirSync(dirname(CONFIG_PATH), { recursive: true });
+	writeFileSync(CONFIG_PATH, SAMPLE_CONFIG, "utf-8");
+	return { created: true, path: CONFIG_PATH };
+}
+
 export function loadConfig(): Config {
 	if (!existsSync(CONFIG_PATH)) {
 		throw new Error(
-			`Config file not found at ${CONFIG_PATH}\n` +
-				`Create it with your RSS feeds:\n\n` +
-				`[[feeds]]\n` +
-				`name = "Example Feed"\n` +
-				`url = "https://example.com/feed.xml"\n`,
+			`Config file not found at ${CONFIG_PATH}\n\n` +
+				`Run 'tread --init' to create a sample configuration.`,
 		);
 	}
 

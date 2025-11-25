@@ -3,7 +3,15 @@ import { mkdirSync, existsSync } from "node:fs";
 import { homedir } from "node:os";
 import { join, dirname } from "node:path";
 
-const DATA_DIR = join(homedir(), ".local", "share", "tread");
+function getDataDir(): string {
+	const xdgData = process.env["XDG_DATA_HOME"];
+	if (xdgData) {
+		return join(xdgData, "tread");
+	}
+	return join(homedir(), ".local", "share", "tread");
+}
+
+const DATA_DIR = getDataDir();
 const DB_PATH = join(DATA_DIR, "tread.db");
 
 let db: Database | null = null;

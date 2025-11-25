@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-import { loadConfig, getConfigPath } from "./config/loader.js";
+import { loadConfig, getConfigPath, initConfig } from "./config/loader.js";
 import { getDatabase, closeDatabase } from "./db/database.js";
 import { App } from "./app.js";
 
@@ -21,12 +21,25 @@ function printHelp(): void {
 	console.log("Usage: tread [options]");
 	console.log();
 	console.log("Options:");
+	console.log("  --init         Create a sample configuration file");
 	console.log("  -h, --help     Show this help message");
 	console.log("  -v, --version  Show version number");
 	console.log();
 	console.log("Configuration:");
-	console.log(`  Config file: ~/.config/tread/config.toml`);
-	console.log(`  Database:    ~/.local/share/tread/tread.db`);
+	console.log(`  Config: ${getConfigPath()}`);
+}
+
+function runInit(): number {
+	const result = initConfig();
+	if (result.created) {
+		console.log(`Created sample configuration at ${result.path}`);
+		console.log();
+		console.log("Edit the file to add your RSS feeds, then run 'tread' to start.");
+		return 0;
+	} else {
+		console.log(`Configuration already exists at ${result.path}`);
+		return 0;
+	}
 }
 
 function parseArgs(): { shouldExit: boolean; exitCode: number } {
@@ -40,6 +53,10 @@ function parseArgs(): { shouldExit: boolean; exitCode: number } {
 		if (arg === "-h" || arg === "--help") {
 			printHelp();
 			return { shouldExit: true, exitCode: 0 };
+		}
+		if (arg === "--init") {
+			const exitCode = runInit();
+			return { shouldExit: true, exitCode };
 		}
 		// Unknown argument
 		console.error(`Unknown option: ${arg}`);

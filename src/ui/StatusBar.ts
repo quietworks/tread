@@ -8,9 +8,12 @@ import { colors } from "./theme.js";
 export type Pane = "feeds" | "articles" | "article";
 
 const KEYBINDS: Record<Pane, string> = {
-	feeds: "j/k:navigate  l/Enter:select  r:refresh  R:refresh all  q:quit",
-	articles: "j/k:navigate  h:feeds  l/Enter:read  r:refresh  q:quit",
-	article: "j/k:scroll  h:back  gg/G:top/bottom  o:open in browser  q:quit",
+	feeds:
+		":(colon):search  j/k:navigate  l/Enter:select  r:refresh  R:refresh all  q:quit",
+	articles:
+		":(colon):search  j/k:navigate  h:feeds  l/Enter:read  r:refresh  q:quit",
+	article:
+		":(colon):search  j/k:scroll  h:back  gg/G:top/bottom  o:open in browser  q:quit",
 };
 
 export class StatusBar extends BoxRenderable {

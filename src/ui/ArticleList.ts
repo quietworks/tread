@@ -82,6 +82,14 @@ export class ArticleList extends BoxRenderable {
 		this.renderItems();
 	}
 
+	selectByIndex(index: number): void {
+		if (index >= 0 && index < this.articles.length) {
+			this.selectedIndex = index;
+			this.updateScrollOffset();
+			this.renderItems();
+		}
+	}
+
 	private updateScrollOffset(): void {
 		// Keep selection visible with some context
 		const padding = 2;

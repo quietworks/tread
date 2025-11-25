@@ -107,3 +107,15 @@ export function deleteArticlesByFeed(feedUrl: string): void {
 	const stmt = db.prepare(`DELETE FROM articles WHERE feed_url = ?`);
 	stmt.run(feedUrl);
 }
+
+export function getAllArticles(): Article[] {
+	const db = getDatabase();
+	const stmt = db.prepare<ArticleRow, []>(`
+    SELECT * FROM articles
+    ORDER BY published_at DESC, fetched_at DESC
+    LIMIT 1000
+  `);
+
+	const rows = stmt.all();
+	return rows.map(rowToArticle);
+}

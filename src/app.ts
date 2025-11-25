@@ -10,6 +10,7 @@ import { platform } from "node:os";
 import type { Config, FeedConfig } from "./config/types.js";
 import {
 	getArticlesByFeed,
+	getAllArticles,
 	getUnreadCount,
 	markAsRead,
 } from "./db/articles.js";
@@ -18,9 +19,13 @@ import { FeedList, type FeedListItem } from "./ui/FeedList.js";
 import { ArticleList } from "./ui/ArticleList.js";
 import { ArticleView } from "./ui/ArticleView.js";
 import { StatusBar, type Pane } from "./ui/StatusBar.js";
+import { CommandPalette } from "./ui/CommandPalette.js";
 import { KeybindingHandler } from "./keybindings/handler.js";
 import { colors, layout } from "./ui/theme.js";
 import type { Article } from "./db/types.js";
+import { Searcher } from "./search/searcher.js";
+import { getCommands } from "./commands/registry.js";
+import type { SearchResult, Command } from "./search/types.js";
 
 export class App {
 	private renderer!: CliRenderer;
@@ -31,11 +36,14 @@ export class App {
 	private articleList!: ArticleList;
 	private articleView!: ArticleView;
 	private statusBar!: StatusBar;
+	private commandPalette!: CommandPalette;
 	private keybindingHandler: KeybindingHandler;
+	private searcher!: Searcher;
 
 	private currentPane: Pane = "feeds";
 	private selectedFeed: FeedConfig | null = null;
 	private selectedArticle: Article | null = null;
+	private commandPaletteQuery = "";
 
 	constructor(config: Config) {
 		this.config = config;
@@ -105,6 +113,18 @@ export class App {
 		// Status bar
 		this.statusBar = new StatusBar(this.renderer, terminalWidth);
 
+		// Command palette
+		this.commandPalette = new CommandPalette(
+			this.renderer,
+			terminalWidth,
+			terminalHeight,
+		);
+
+		// Initialize searcher
+		this.searcher = new Searcher(getCommands(this), this.config.feeds, () =>
+			getAllArticles(),
+		);
+
 		// Build layout
 		rightBox.add(this.articleList);
 		rightBox.add(this.articleView);
@@ -114,6 +134,7 @@ export class App {
 		this.rootBox.add(this.statusBar);
 
 		this.renderer.root.add(this.rootBox);
+		this.renderer.root.add(this.commandPalette);
 
 		// Handle keyboard input
 		this.renderer.keyInput.on("keypress", this.handleKeyDown.bind(this));
@@ -212,6 +233,30 @@ export class App {
 					this.articleView.pageDown();
 				}
 				break;
+
+			case "openCommandPalette":
+				this.openCommandPalette();
+				break;
+
+			case "closeCommandPalette":
+				this.closeCommandPalette();
+				break;
+
+			case "commandPaletteInput":
+				this.handleCommandPaletteInput(action.char);
+				break;
+
+			case "commandPaletteBackspace":
+				this.handleCommandPaletteBackspace();
+				break;
+
+			case "commandPaletteNavigate":
+				this.commandPalette.moveSelection(action.direction);
+				break;
+
+			case "commandPaletteSelect":
+				this.selectCommandPaletteResult();
+				break;
 		}
 	}
 
@@ -234,6 +279,7 @@ export class App {
 		this.articleList.updateDimensions(rightWidth, articleListHeight);
 		this.articleView.updateDimensions(rightWidth, articleViewHeight);
 		this.statusBar.updateDimensions(terminalWidth);
+		this.commandPalette.updateDimensions(terminalWidth, terminalHeight);
 
 		this.renderer.root.requestRender();
 	}
@@ -400,7 +446,7 @@ export class App {
 		}
 	}
 
-	private async refreshAllFeeds(): Promise<void> {
+	async refreshAllFeeds(): Promise<void> {
 		this.statusBar.showLoading();
 		try {
 			const results = await fetchAllFeeds(this.config.feeds.map((f) => f.url));
@@ -443,6 +489,93 @@ export class App {
 				this.statusBar.showError("Failed to open browser");
 			}
 		});
+	}
+
+	private openCommandPalette(): void {
+		this.commandPaletteQuery = "";
+		this.keybindingHandler.setCommandPaletteMode(true);
+		this.commandPalette.open();
+		this.performSearch("");
+	}
+
+	private closeCommandPalette(): void {
+		this.keybindingHandler.setCommandPaletteMode(false);
+		this.commandPalette.close();
+		this.commandPaletteQuery = "";
+	}
+
+	private handleCommandPaletteInput(char: string): void {
+		this.commandPaletteQuery += char;
+		this.commandPalette.setQuery(this.commandPaletteQuery);
+		this.performSearch(this.commandPaletteQuery);
+	}
+
+	private handleCommandPaletteBackspace(): void {
+		if (this.commandPaletteQuery.length > 0) {
+			this.commandPaletteQuery = this.commandPaletteQuery.slice(0, -1);
+			this.commandPalette.setQuery(this.commandPaletteQuery);
+			this.performSearch(this.commandPaletteQuery);
+		}
+	}
+
+	private performSearch(query: string): void {
+		const results = this.searcher.search(query);
+		this.commandPalette.setResults(results);
+	}
+
+	private selectCommandPaletteResult(): void {
+		const result = this.commandPalette.getSelectedResult();
+		if (!result) return;
+
+		this.closeCommandPalette();
+
+		switch (result.type) {
+			case "command":
+				const command = result.data as Command;
+				command.execute();
+				break;
+
+			case "feed":
+				const feed = result.data as FeedConfig;
+				this.navigateToFeed(feed);
+				break;
+
+			case "article":
+				const article = result.data as Article;
+				this.navigateToArticle(article);
+				break;
+		}
+	}
+
+	private navigateToFeed(feed: FeedConfig): void {
+		const index = this.config.feeds.findIndex((f) => f.url === feed.url);
+		if (index >= 0) {
+			this.feedList.selectByIndex(index);
+			this.selectFeed(feed);
+			this.focusPane("feeds");
+		}
+	}
+
+	private navigateToArticle(article: Article): void {
+		// Find parent feed
+		const feed = this.config.feeds.find((f) => f.url === article.feedUrl);
+		if (!feed) return;
+
+		// Navigate to feed first
+		const feedIndex = this.config.feeds.findIndex((f) => f.url === feed.url);
+		if (feedIndex >= 0) {
+			this.feedList.selectByIndex(feedIndex);
+			this.selectFeed(feed);
+		}
+
+		// Select article in list
+		const articles = getArticlesByFeed(feed.url);
+		const articleIndex = articles.findIndex((a) => a.id === article.id);
+		if (articleIndex >= 0) {
+			this.articleList.selectByIndex(articleIndex);
+			this.selectArticle(article);
+			this.focusPane("article");
+		}
 	}
 
 	private quit(): void {

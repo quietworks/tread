@@ -9,4 +9,10 @@ export type Action =
 	| { type: "openInBrowser" }
 	| { type: "focusPane"; pane: "feeds" | "articles" | "article" }
 	| { type: "scroll"; direction: "up" | "down"; amount: number }
-	| { type: "pageScroll"; direction: "up" | "down" };
+	| { type: "pageScroll"; direction: "up" | "down" }
+	| { type: "openCommandPalette" }
+	| { type: "closeCommandPalette" }
+	| { type: "commandPaletteInput"; char: string }
+	| { type: "commandPaletteBackspace" }
+	| { type: "commandPaletteNavigate"; direction: "up" | "down" }
+	| { type: "commandPaletteSelect" };

@@ -80,6 +80,13 @@ export class FeedList extends BoxRenderable {
 		this.renderItems();
 	}
 
+	selectByIndex(index: number): void {
+		if (index >= 0 && index < this.items.length) {
+			this.selectedIndex = index;
+			this.renderItems();
+		}
+	}
+
 	private renderItems(): void {
 		// Clear existing items
 		for (const item of this.itemRenderables) {

@@ -7,10 +7,15 @@ export class KeybindingHandler {
 	private currentPane: Pane = "feeds";
 	private pendingG = false;
 	private gTimeout: ReturnType<typeof setTimeout> | null = null;
+	private isCommandPaletteMode = false;
 
 	setPane(pane: Pane): void {
 		this.currentPane = pane;
 		this.clearPendingG();
+	}
+
+	setCommandPaletteMode(active: boolean): void {
+		this.isCommandPaletteMode = active;
 	}
 
 	private clearPendingG(): void {
@@ -23,6 +28,20 @@ export class KeybindingHandler {
 
 	handleKey(key: KeyEvent): Action | null {
 		const keyName = key.name;
+
+		// Check for command palette trigger (global)
+		// Note: ":" is shift+semicolon, check both keyName and sequence
+		if (
+			(keyName === ":" || key.sequence === ":") &&
+			!this.isCommandPaletteMode
+		) {
+			return { type: "openCommandPalette" };
+		}
+
+		// If in command palette mode, route to palette handler
+		if (this.isCommandPaletteMode) {
+			return this.handleCommandPaletteKey(key);
+		}
 
 		// Handle gg sequence
 		if (keyName === "g" && !key.ctrl && !key.meta) {
@@ -162,6 +181,41 @@ export class KeybindingHandler {
 
 		if (keyName === "o") {
 			return { type: "openInBrowser" };
+		}
+
+		return null;
+	}
+
+	private handleCommandPaletteKey(key: KeyEvent): Action | null {
+		const keyName = key.name;
+
+		if (keyName === "escape") {
+			return { type: "closeCommandPalette" };
+		}
+
+		if (keyName === "up" || (keyName === "k" && !key.ctrl && !key.meta)) {
+			return { type: "commandPaletteNavigate", direction: "up" };
+		}
+
+		if (keyName === "down" || (keyName === "j" && !key.ctrl && !key.meta)) {
+			return { type: "commandPaletteNavigate", direction: "down" };
+		}
+
+		if (keyName === "return" || keyName === "linefeed") {
+			return { type: "commandPaletteSelect" };
+		}
+
+		if (keyName === "backspace") {
+			return { type: "commandPaletteBackspace" };
+		}
+
+		// Character input (printable characters only)
+		if (key.sequence && key.sequence.length === 1 && !key.ctrl && !key.meta) {
+			const charCode = key.sequence.charCodeAt(0);
+			// Accept printable ASCII (space to tilde) and extended characters
+			if (charCode >= 32 && charCode < 127) {
+				return { type: "commandPaletteInput", char: key.sequence };
+			}
 		}
 
 		return null;

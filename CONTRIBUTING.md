@@ -1,6 +1,6 @@
-# Contributing to Papertrail
+# Contributing to Tread
 
-Thank you for your interest in contributing to Papertrail!
+Thank you for your interest in contributing to Tread!
 
 ## Development Setup
 
@@ -13,8 +13,8 @@ Thank you for your interest in contributing to Papertrail!
 1. Clone the repository:
 
 ```bash
-git clone https://github.com/yourusername/papertrail.git
-cd papertrail
+git clone https://github.com/quietworks/tread.git
+cd tread
 ```
 
 2. Install dependencies:
@@ -23,7 +23,7 @@ cd papertrail
 bun install
 ```
 
-3. Create a config file at `~/.config/papertrail/config.toml`:
+3. Create a config file at `~/.config/tread/config.toml`:
 
 ```toml
 [[feeds]]
@@ -77,7 +77,7 @@ src/
 
 ### Architecture
 
-Papertrail uses the [OpenTUI](https://github.com/sst/opentui) library for terminal rendering. The application follows a simple architecture:
+Tread uses the [OpenTUI](https://github.com/sst/opentui) library for terminal rendering. The application follows a simple architecture:
 
 - **App**: Main orchestrator that coordinates UI components and handles state
 - **UI Components**: Extend OpenTUI's `BoxRenderable` for custom rendering

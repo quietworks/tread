@@ -4,7 +4,7 @@ import { homedir } from "node:os";
 import { join } from "node:path";
 import type { Config, FeedConfig } from "./types.js";
 
-const CONFIG_DIR = join(homedir(), ".config", "papertrail");
+const CONFIG_DIR = join(homedir(), ".config", "tread");
 const CONFIG_PATH = join(CONFIG_DIR, "config.toml");
 
 export function getConfigPath(): string {

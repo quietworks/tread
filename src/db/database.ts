@@ -3,8 +3,8 @@ import { mkdirSync, existsSync } from "node:fs";
 import { homedir } from "node:os";
 import { join, dirname } from "node:path";
 
-const DATA_DIR = join(homedir(), ".local", "share", "papertrail");
-const DB_PATH = join(DATA_DIR, "papertrail.db");
+const DATA_DIR = join(homedir(), ".local", "share", "tread");
+const DB_PATH = join(DATA_DIR, "tread.db");
 
 let db: Database | null = null;
 

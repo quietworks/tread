@@ -1,4 +1,4 @@
-# Papertrail
+# Tread
 
 A fast, keyboard-driven TUI RSS reader built with [OpenTUI](https://github.com/sst/opentui).
 
@@ -16,8 +16,8 @@ Requires [Bun](https://bun.sh) v1.0 or later.
 
 ```bash
 # Clone the repository
-git clone https://github.com/yourusername/papertrail.git
-cd papertrail
+git clone https://github.com/quietworks/tread.git
+cd tread
 
 # Install dependencies
 bun install
@@ -28,7 +28,7 @@ bun run start
 
 ## Configuration
 
-Create a configuration file at `~/.config/papertrail/config.toml`:
+Create a configuration file at `~/.config/tread/config.toml`:
 
 ```toml
 [[feeds]]
@@ -79,8 +79,8 @@ url = "https://newsletter.pragmaticengineer.com/feed"
 
 ## Data Storage
 
-- **Configuration**: `~/.config/papertrail/config.toml`
-- **Database**: `~/.local/share/papertrail/papertrail.db`
+- **Configuration**: `~/.config/tread/config.toml`
+- **Database**: `~/.local/share/tread/tread.db`
 
 ## License
 

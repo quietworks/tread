@@ -1,5 +1,5 @@
 {
-  "name": "papertrail",
+  "name": "tread",
   "version": "0.1.0",
   "description": "A fast, keyboard-driven TUI RSS reader",
   "type": "module",

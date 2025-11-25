@@ -1,0 +1,10 @@
+# Test configuration for screenshots
+# Uses mock feed server at localhost:3333
+
+[[feeds]]
+name = "Tech Daily"
+url = "http://localhost:3333/feeds/tech-news.xml"
+
+[[feeds]]
+name = "Dev Insights"
+url = "http://localhost:3333/feeds/dev-blog.xml"

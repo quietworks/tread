@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0">
+  <channel>
+    <title>Tech Daily</title>
+    <link>https://example.com/tech</link>
+    <description>Daily technology news and insights</description>
+    <lastBuildDate>Mon, 25 Nov 2024 12:00:00 GMT</lastBuildDate>
+    <item>
+      <title>Rust 2.0 Released with Major Performance Improvements</title>
+      <link>https://example.com/tech/rust-2</link>
+      <description>The Rust programming language team has announced version 2.0, featuring significant compile-time improvements and new async capabilities. The release includes a redesigned borrow checker that reduces false positives by 40%.</description>
+      <pubDate>Mon, 25 Nov 2024 10:00:00 GMT</pubDate>
+      <guid>rust-2-release</guid>
+    </item>
+    <item>
+      <title>SQLite 4.0 Introduces Native Vector Search</title>
+      <link>https://example.com/tech/sqlite-4</link>
+      <description>SQLite 4.0 brings built-in vector similarity search, making it easier to build AI-powered applications without external dependencies. The new VECTOR type supports up to 2048 dimensions.</description>
+      <pubDate>Mon, 25 Nov 2024 08:30:00 GMT</pubDate>
+      <guid>sqlite-4-vectors</guid>
+    </item>
+    <item>
+      <title>Terminal UIs Are Making a Comeback</title>
+      <link>https://example.com/tech/tui-comeback</link>
+      <description>Developers are increasingly turning to terminal-based user interfaces for their efficiency and keyboard-driven workflows. Tools like LazyGit, btop, and new RSS readers are leading the renaissance.</description>
+      <pubDate>Sun, 24 Nov 2024 14:00:00 GMT</pubDate>
+      <guid>tui-comeback</guid>
+    </item>
+    <item>
+      <title>Bun 2.0 Achieves Node.js API Compatibility</title>
+      <link>https://example.com/tech/bun-2</link>
+      <description>Bun 2.0 reaches a major milestone with near-complete Node.js API compatibility. The JavaScript runtime now passes 98% of the Node.js test suite while maintaining its performance advantages.</description>
+      <pubDate>Sun, 24 Nov 2024 09:00:00 GMT</pubDate>
+      <guid>bun-2-compat</guid>
+    </item>
+    <item>
+      <title>The Rise of Local-First Software</title>
+      <link>https://example.com/tech/local-first</link>
+      <description>A growing movement of developers is building software that works offline-first, syncing when possible. This approach prioritizes user data ownership and reduces cloud dependencies.</description>
+      <pubDate>Sat, 23 Nov 2024 16:00:00 GMT</pubDate>
+      <guid>local-first-software</guid>
+    </item>
+  </channel>
+</rss>

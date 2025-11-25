@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+  <title>Dev Insights</title>
+  <link href="https://example.com/dev"/>
+  <updated>2024-11-25T12:00:00Z</updated>
+  <id>https://example.com/dev/feed</id>
+  <entry>
+    <title>Why I Switched from VS Code to Neovim</title>
+    <link href="https://example.com/dev/vscode-to-neovim"/>
+    <id>vscode-to-neovim</id>
+    <updated>2024-11-25T11:00:00Z</updated>
+    <summary>After 5 years of using VS Code, I made the switch to Neovim. Here's what I learned about modal editing, configuration as code, and why I'm never going back.</summary>
+  </entry>
+  <entry>
+    <title>Building CLI Tools with TypeScript in 2024</title>
+    <link href="https://example.com/dev/cli-typescript"/>
+    <id>cli-typescript-2024</id>
+    <updated>2024-11-24T15:00:00Z</updated>
+    <summary>TypeScript has become an excellent choice for CLI development. This guide covers the best practices, libraries, and patterns for building robust command-line tools.</summary>
+  </entry>
+  <entry>
+    <title>Understanding the XDG Base Directory Specification</title>
+    <link href="https://example.com/dev/xdg-spec"/>
+    <id>xdg-base-directory</id>
+    <updated>2024-11-23T10:00:00Z</updated>
+    <summary>Where should your app store config files? The XDG Base Directory Specification provides a standard answer. Here's how to implement it correctly.</summary>
+  </entry>
+  <entry>
+    <title>RSS is Not Dead: Building Modern Feed Readers</title>
+    <link href="https://example.com/dev/rss-not-dead"/>
+    <id>rss-not-dead</id>
+    <updated>2024-11-22T09:00:00Z</updated>
+    <summary>Despite social media's dominance, RSS remains the best way to follow content on your own terms. Here's how to build a modern RSS reader.</summary>
+  </entry>
+</feed>

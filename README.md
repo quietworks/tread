@@ -2,6 +2,8 @@
 
 A fast, keyboard-driven TUI RSS reader built with [OpenTUI](https://github.com/sst/opentui).
 
+![Tread screenshot](screenshots/tread.png)
+
 ## Features
 
 - **3-pane interface**: Feeds, articles, and article content view

@@ -26,28 +26,28 @@ const SCHEMA = `
 `;
 
 export function getDatabase(): Database {
-  if (db) {
-    return db;
-  }
+	if (db) {
+		return db;
+	}
 
-  if (!existsSync(dirname(DB_PATH))) {
-    mkdirSync(dirname(DB_PATH), { recursive: true });
-  }
+	if (!existsSync(dirname(DB_PATH))) {
+		mkdirSync(dirname(DB_PATH), { recursive: true });
+	}
 
-  db = new Database(DB_PATH);
-  db.exec("PRAGMA journal_mode = WAL");
-  db.exec(SCHEMA);
+	db = new Database(DB_PATH);
+	db.exec("PRAGMA journal_mode = WAL");
+	db.exec(SCHEMA);
 
-  return db;
+	return db;
 }
 
 export function closeDatabase(): void {
-  if (db) {
-    db.close();
-    db = null;
-  }
+	if (db) {
+		db.close();
+		db = null;
+	}
 }
 
 export function getDatabasePath(): string {
-  return DB_PATH;
+	return DB_PATH;
 }

@@ -269,6 +269,10 @@ export class App {
 			case "commandPaletteSelect":
 				this.handleCommandPaletteSelect();
 				break;
+
+			case "commandPalettePaste":
+				this.handleCommandPalettePaste();
+				break;
 		}
 	}
 
@@ -563,6 +567,37 @@ export class App {
 				this.commandPalette.setQuery(this.commandPaletteQuery);
 				this.performSearch(this.commandPaletteQuery);
 			}
+		}
+	}
+
+	private async handleCommandPalettePaste(): Promise<void> {
+		logger.debug("handleCommandPalettePaste called");
+
+		try {
+			// Read from clipboard using platform-specific command
+			const proc = Bun.spawn(
+				platform() === "darwin"
+					? ["pbpaste"]
+					: ["xclip", "-selection", "clipboard", "-o"],
+				{
+					stdout: "pipe",
+					stderr: "pipe",
+				},
+			);
+
+			const text = await new Response(proc.stdout).text();
+			const trimmed = text.trim();
+
+			logger.debug("Clipboard text retrieved", {
+				length: trimmed.length,
+				text: trimmed,
+			});
+
+			if (trimmed) {
+				this.handleCommandPaletteInput(trimmed);
+			}
+		} catch (error) {
+			logger.error("Failed to read from clipboard", error);
 		}
 	}
 

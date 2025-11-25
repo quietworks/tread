@@ -34,7 +34,9 @@ function runInit(): number {
 	if (result.created) {
 		console.log(`Created sample configuration at ${result.path}`);
 		console.log();
-		console.log("Edit the file to add your RSS feeds, then run 'tread' to start.");
+		console.log(
+			"Edit the file to add your RSS feeds, then run 'tread' to start.",
+		);
 		return 0;
 	} else {
 		console.log(`Configuration already exists at ${result.path}`);

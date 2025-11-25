@@ -15,4 +15,5 @@ export type Action =
 	| { type: "commandPaletteInput"; char: string }
 	| { type: "commandPaletteBackspace" }
 	| { type: "commandPaletteNavigate"; direction: "up" | "down" }
-	| { type: "commandPaletteSelect" };
+	| { type: "commandPaletteSelect" }
+	| { type: "commandPalettePaste" };

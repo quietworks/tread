@@ -3,6 +3,7 @@ import {
 	TextRenderable,
 	type RenderContext,
 	RGBA,
+	type PasteEvent,
 } from "@opentui/core";
 import { colors } from "./theme.js";
 import type { SearchResult } from "../search/types.js";
@@ -40,6 +41,7 @@ export class CommandPalette extends BoxRenderable {
 			position: "absolute",
 			left: 0,
 			top: 0,
+			onPaste: (event: PasteEvent) => this.handlePaste(event),
 		});
 
 		this.terminalWidth = width;
@@ -270,6 +272,22 @@ export class CommandPalette extends BoxRenderable {
 		}
 
 		this.onFormSubmit(values);
+	}
+
+	handlePaste(event: PasteEvent): void {
+		logger.debug("CommandPalette.handlePaste", {
+			text: event.text,
+			textLength: event.text.length,
+			mode: this.mode,
+		});
+
+		if (this.mode === "form") {
+			// Paste into current form field
+			this.handleFormInput(event.text);
+		} else {
+			// Paste into search query
+			this.handleFormInput(event.text);
+		}
 	}
 
 	updateDimensions(width: number, height: number): void {

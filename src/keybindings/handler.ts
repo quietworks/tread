@@ -231,11 +231,17 @@ export class KeybindingHandler {
 			return { type: "commandPaletteBackspace" };
 		}
 
-		// Paste support (Cmd+V / Ctrl+V)
+		// Paste support (Cmd+V / Ctrl+V / Ctrl+Shift+V)
 		if (keyName === "v" && (key.ctrl || key.meta)) {
-			// We can't directly access clipboard in terminal, so ignore this
-			// Terminal will handle paste and send characters
-			return null;
+			logger.debug("Paste key detected (Cmd/Ctrl+V)");
+			// Request paste action - App will read from clipboard
+			return { type: "commandPalettePaste" };
+		}
+
+		// Alternative paste binding (Ctrl+Y - common in terminals)
+		if (keyName === "y" && key.ctrl && !key.meta) {
+			logger.debug("Paste key detected (Ctrl+Y)");
+			return { type: "commandPalettePaste" };
 		}
 
 		// Character input (printable characters only)

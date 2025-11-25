@@ -43,3 +43,28 @@ The application uses OpenTUI for terminal rendering with a component-based archi
 - TypeScript strict mode with `noUncheckedIndexedAccess`
 - ESM modules (`"type": "module"`)
 - Conventional commits: `feat:`, `fix:`, `docs:`, `refactor:`, `chore:`
+
+## Release Process
+
+Releases are automated via GitHub Actions. When a release is published:
+
+1. Binaries are built for darwin-arm64, darwin-x64, linux-arm64, linux-x64
+2. Binaries and SHA256 checksums are uploaded to the release
+3. The Homebrew tap (quietworks/homebrew-tread) is automatically updated
+
+### To create a release:
+
+```bash
+# 1. Bump version in package.json
+# 2. Commit the version bump
+git add package.json
+git commit -m "chore: bump version to X.Y.Z"
+git push origin main
+
+# 3. Create the release (triggers build + tap update)
+gh release create vX.Y.Z --title "vX.Y.Z" --notes "Release notes here"
+```
+
+### Required setup (one-time):
+
+The `TAP_GITHUB_TOKEN` secret must be configured in the tread repo settings. This is a fine-grained PAT with Contents (read/write) permission on `quietworks/homebrew-tread`.

@@ -12,23 +12,38 @@ A fast, keyboard-driven TUI RSS reader built with [OpenTUI](https://github.com/s
 
 ## Installation
 
+### Homebrew (macOS/Linux)
+
+```bash
+brew install quietworks/tread/tread
+```
+
+### From Source
+
 Requires [Bun](https://bun.sh) v1.0 or later.
 
 ```bash
-# Clone the repository
 git clone https://github.com/quietworks/tread.git
 cd tread
-
-# Install dependencies
 bun install
-
-# Run
 bun run start
+```
+
+## Quick Start
+
+```bash
+# Create a sample configuration
+tread --init
+
+# Start reading
+tread
 ```
 
 ## Configuration
 
-Create a configuration file at `~/.config/tread/config.toml`:
+Configuration is stored at `~/.config/tread/config.toml` (or `$XDG_CONFIG_HOME/tread/config.toml`).
+
+Run `tread --init` to create a sample config, or create one manually:
 
 ```toml
 [[feeds]]
@@ -79,8 +94,10 @@ url = "https://newsletter.pragmaticengineer.com/feed"
 
 ## Data Storage
 
-- **Configuration**: `~/.config/tread/config.toml`
-- **Database**: `~/.local/share/tread/tread.db`
+Tread respects XDG Base Directory specifications:
+
+- **Configuration**: `$XDG_CONFIG_HOME/tread/config.toml` (default: `~/.config/tread/config.toml`)
+- **Database**: `$XDG_DATA_HOME/tread/tread.db` (default: `~/.local/share/tread/tread.db`)
 
 ## License
 

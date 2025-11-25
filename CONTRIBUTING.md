@@ -23,12 +23,10 @@ cd tread
 bun install
 ```
 
-3. Create a config file at `~/.config/tread/config.toml`:
+3. Create a sample config:
 
-```toml
-[[feeds]]
-name = "Hacker News"
-url = "https://hnrss.org/frontpage"
+```bash
+bun run start -- --init
 ```
 
 4. Run the application:

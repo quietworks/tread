@@ -21,11 +21,13 @@ import { ArticleView } from "./ui/ArticleView.js";
 import { StatusBar, type Pane } from "./ui/StatusBar.js";
 import { CommandPalette } from "./ui/CommandPalette.js";
 import { KeybindingHandler } from "./keybindings/handler.js";
+import type { Action } from "./keybindings/actions.js";
 import { colors, layout } from "./ui/theme.js";
 import type { Article } from "./db/types.js";
 import { Searcher } from "./search/searcher.js";
 import { getCommands } from "./commands/registry.js";
 import type { SearchResult, Command } from "./search/types.js";
+import { logger } from "./logger.js";
 
 export class App {
 	private renderer!: CliRenderer;
@@ -178,7 +180,17 @@ export class App {
 	}
 
 	private handleKeyDown(key: KeyEvent): void {
-		const action = this.keybindingHandler.handleKey(key);
+		let action: Action | null = null;
+
+		try {
+			action = this.keybindingHandler.handleKey(key);
+		} catch (error) {
+			// Ignore errors from malformed key events (e.g., paste with ANSI codes)
+			// This is a workaround for OpenTUI's Bun.stripANSI issue
+			console.error("Key handling error:", error);
+			return;
+		}
+
 		if (!action) return;
 
 		switch (action.type) {
@@ -251,11 +263,11 @@ export class App {
 				break;
 
 			case "commandPaletteNavigate":
-				this.commandPalette.moveSelection(action.direction);
+				this.handleCommandPaletteNavigation(action.direction);
 				break;
 
 			case "commandPaletteSelect":
-				this.selectCommandPaletteResult();
+				this.handleCommandPaletteSelect();
 				break;
 		}
 	}
@@ -499,22 +511,78 @@ export class App {
 	}
 
 	private closeCommandPalette(): void {
+		const mode = this.commandPalette.getMode();
+
+		// If in form mode, go back to search
+		if (mode === "form") {
+			this.commandPalette.backToSearch();
+			this.performSearch(this.commandPaletteQuery);
+			return;
+		}
+
+		// Otherwise close completely
+		this.keybindingHandler.setCommandPaletteMode(false);
+		this.commandPalette.close();
+		this.commandPaletteQuery = "";
+	}
+
+	closeCommandPaletteFromCommand(): void {
+		// Always close completely (used by commands)
 		this.keybindingHandler.setCommandPaletteMode(false);
 		this.commandPalette.close();
 		this.commandPaletteQuery = "";
 	}
 
 	private handleCommandPaletteInput(char: string): void {
-		this.commandPaletteQuery += char;
-		this.commandPalette.setQuery(this.commandPaletteQuery);
-		this.performSearch(this.commandPaletteQuery);
+		const mode = this.commandPalette.getMode();
+		logger.debug("handleCommandPaletteInput", {
+			mode,
+			char,
+			charLength: char.length,
+		});
+
+		if (mode === "form") {
+			logger.debug("Passing to form input", { char });
+			this.commandPalette.handleFormInput(char);
+		} else {
+			this.commandPaletteQuery += char;
+			logger.debug("Updated search query", { query: this.commandPaletteQuery });
+			this.commandPalette.setQuery(this.commandPaletteQuery);
+			this.performSearch(this.commandPaletteQuery);
+		}
 	}
 
 	private handleCommandPaletteBackspace(): void {
-		if (this.commandPaletteQuery.length > 0) {
-			this.commandPaletteQuery = this.commandPaletteQuery.slice(0, -1);
-			this.commandPalette.setQuery(this.commandPaletteQuery);
-			this.performSearch(this.commandPaletteQuery);
+		const mode = this.commandPalette.getMode();
+
+		if (mode === "form") {
+			this.commandPalette.handleFormBackspace();
+		} else {
+			if (this.commandPaletteQuery.length > 0) {
+				this.commandPaletteQuery = this.commandPaletteQuery.slice(0, -1);
+				this.commandPalette.setQuery(this.commandPaletteQuery);
+				this.performSearch(this.commandPaletteQuery);
+			}
+		}
+	}
+
+	private handleCommandPaletteNavigation(direction: "up" | "down"): void {
+		const mode = this.commandPalette.getMode();
+
+		if (mode === "form") {
+			this.commandPalette.handleFormNavigation(direction);
+		} else {
+			this.commandPalette.moveSelection(direction);
+		}
+	}
+
+	private handleCommandPaletteSelect(): void {
+		const mode = this.commandPalette.getMode();
+
+		if (mode === "form") {
+			this.commandPalette.handleFormSubmit();
+		} else {
+			this.selectCommandPaletteResult();
 		}
 	}
 
@@ -527,20 +595,21 @@ export class App {
 		const result = this.commandPalette.getSelectedResult();
 		if (!result) return;
 
-		this.closeCommandPalette();
-
 		switch (result.type) {
 			case "command":
 				const command = result.data as Command;
+				// Execute command first - it may want to keep palette open (e.g., for forms)
 				command.execute();
 				break;
 
 			case "feed":
+				this.closeCommandPalette();
 				const feed = result.data as FeedConfig;
 				this.navigateToFeed(feed);
 				break;
 
 			case "article":
+				this.closeCommandPalette();
 				const article = result.data as Article;
 				this.navigateToArticle(article);
 				break;
@@ -578,7 +647,70 @@ export class App {
 		}
 	}
 
-	private quit(): void {
+	openAddFeedForm(): void {
+		this.commandPalette.openForm(
+			"Add Feed",
+			[
+				{ label: "Name", placeholder: "My Feed" },
+				{ label: "URL", placeholder: "https://example.com/feed.xml" },
+			],
+			(values) => {
+				const name = values.Name || "";
+				const url = values.URL || "";
+				this.addFeed(name, url);
+			},
+		);
+	}
+
+	private addFeed(name: string, url: string): void {
+		// Validate inputs
+		if (!name.trim() || !url.trim()) {
+			this.statusBar.showError("Name and URL are required");
+			this.closeCommandPalette();
+			return;
+		}
+
+		// Check if URL is valid
+		try {
+			new URL(url);
+		} catch {
+			this.statusBar.showError("Invalid URL");
+			this.closeCommandPalette();
+			return;
+		}
+
+		// Check if feed already exists
+		if (this.config.feeds.some((f) => f.url === url)) {
+			this.statusBar.showError("Feed already exists");
+			this.closeCommandPalette();
+			return;
+		}
+
+		// Add to config
+		this.config.feeds.push({ name: name.trim(), url: url.trim() });
+
+		// Close palette and show success
+		this.closeCommandPalette();
+		this.statusBar.showSuccess(`Added feed: ${name}`);
+		setTimeout(() => this.statusBar.clearMessage(), 2000);
+
+		// Update feed list
+		this.updateFeedList();
+
+		// Fetch the new feed
+		this.statusBar.showLoading(name);
+		fetchAndStoreFeed(url)
+			.then(() => {
+				this.updateFeedList();
+				this.statusBar.showSuccess(`Fetched ${name}`);
+				setTimeout(() => this.statusBar.clearMessage(), 2000);
+			})
+			.catch(() => {
+				this.statusBar.showError(`Failed to fetch ${name}`);
+			});
+	}
+
+	quit(): void {
 		this.renderer.destroy();
 		process.exit(0);
 	}

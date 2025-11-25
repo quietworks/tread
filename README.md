@@ -101,6 +101,25 @@ Tread respects XDG Base Directory specifications:
 - **Configuration**: `$XDG_CONFIG_HOME/tread/config.toml` (default: `~/.config/tread/config.toml`)
 - **Database**: `$XDG_DATA_HOME/tread/tread.db` (default: `~/.local/share/tread/tread.db`)
 
+## Debugging
+
+Tread supports configurable logging for troubleshooting:
+
+```bash
+# Set log level (debug, info, warn, error, none)
+TREAD_LOG_LEVEL=debug tread
+
+# Write logs to a file instead of stderr
+TREAD_LOG_FILE=/tmp/tread.log TREAD_LOG_LEVEL=debug tread
+```
+
+Log levels:
+- `debug`: Detailed information for debugging (includes key events, input handling)
+- `info`: General informational messages
+- `warn`: Warning messages
+- `error`: Error messages only
+- `none`: No logging (default)
+
 ## License
 
 MIT License - see [LICENSE](LICENSE) for details.

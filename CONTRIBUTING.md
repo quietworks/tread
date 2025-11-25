@@ -7,6 +7,7 @@ Thank you for your interest in contributing to Tread!
 ### Prerequisites
 
 - [Bun](https://bun.sh) v1.0 or later
+- [just](https://github.com/casey/just) (optional, but recommended)
 
 ### Getting Started
 
@@ -36,6 +37,19 @@ bun run start
 ```
 
 ### Development Commands
+
+Run `just` to see all available commands, or use these directly:
+
+| Command | Description |
+|---------|-------------|
+| `just run` | Run the application |
+| `just dev` | Run with watch mode (auto-restart on changes) |
+| `just check` | Type-check the project |
+| `just fmt` | Format code |
+| `just serve-mock` | Start mock feed server for testing |
+| `just screenshot` | Generate README screenshot (requires vhs) |
+
+Or using bun:
 
 | Command | Description |
 |---------|-------------|
@@ -120,9 +134,10 @@ When reporting issues, please include:
 1. Fork the repository
 2. Create a feature branch (`git checkout -b feat/my-feature`)
 3. Make your changes
-4. Run type checking (`bun run build`)
-5. Commit with a conventional commit message
-6. Push and open a pull request
+4. Run type checking (`just check` or `bun run build`)
+5. Format code (`just fmt`)
+6. Commit with a conventional commit message
+7. Push and open a pull request
 
 ## License
 

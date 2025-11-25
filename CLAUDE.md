@@ -8,6 +8,20 @@ Tread is a keyboard-driven TUI RSS reader built with Bun and OpenTUI. It feature
 
 ## Development Commands
 
+This project uses [just](https://github.com/casey/just) as a command runner. Run `just` to see all available commands.
+
+```bash
+just install         # Install dependencies
+just run             # Run the application
+just dev             # Run with watch mode (auto-restart on changes)
+just check           # Type-check the project
+just fmt             # Format code
+just screenshot      # Generate README screenshot (requires vhs)
+just release X.Y.Z   # Create a new release
+```
+
+Or using bun directly:
+
 ```bash
 bun install          # Install dependencies
 bun run start        # Run the application
@@ -55,16 +69,41 @@ Releases are automated via GitHub Actions. When a release is published:
 ### To create a release:
 
 ```bash
-# 1. Bump version in package.json
-# 2. Commit the version bump
-git add package.json
-git commit -m "chore: bump version to X.Y.Z"
-git push origin main
-
-# 3. Create the release (triggers build + tap update)
-gh release create vX.Y.Z --title "vX.Y.Z" --notes "Release notes here"
+just release X.Y.Z
 ```
+
+This will:
+1. Validate version format
+2. Update version in package.json
+3. Commit and push
+4. Create GitHub release (triggers build + tap update)
 
 ### Required setup (one-time):
 
 The `TAP_GITHUB_TOKEN` secret must be configured in the tread repo settings. This is a fine-grained PAT with Contents (read/write) permission on `quietworks/homebrew-tread`.
+
+## Testing
+
+### Mock Feed Server
+
+A mock feed server is available for testing and screenshots:
+
+```bash
+just serve-mock   # Starts server at http://localhost:3333
+```
+
+Test fixtures are in `test/fixtures/feeds/`:
+- `tech-news.xml` - RSS feed with sample articles
+- `dev-blog.xml` - Atom feed with sample articles
+- `empty.xml` - Empty feed (edge case)
+- `malformed.xml` - Invalid XML (error case)
+
+### Screenshots
+
+To regenerate the README screenshot:
+
+```bash
+just screenshot   # Requires: brew install vhs
+```
+
+Or trigger manually via GitHub Actions: `gh workflow run screenshot.yml`

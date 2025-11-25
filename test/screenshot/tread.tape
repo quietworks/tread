@@ -4,8 +4,9 @@
 Output screenshots/tread.png
 
 Set Shell bash
-Set FontFamily "JetBrains Mono"
-Set FontSize 14
+Set FontFamily "Menlo"
+Set FontSize 13
+Set LineHeight 1.1
 Set Width 1200
 Set Height 700
 Set Padding 20

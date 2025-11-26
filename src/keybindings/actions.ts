@@ -16,4 +16,5 @@ export type Action =
 	| { type: "commandPaletteBackspace" }
 	| { type: "commandPaletteNavigate"; direction: "up" | "down" }
 	| { type: "commandPaletteSelect" }
-	| { type: "commandPalettePaste" };
+	| { type: "commandPalettePaste" }
+	| { type: "executeCommand"; commandId: string };

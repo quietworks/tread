@@ -130,14 +130,19 @@ export function CommandPalette(props: CommandPaletteProps): JSX.Element {
 											const isSelected = () =>
 												actualIndex() === props.selectedIndex;
 
-											const maxLabelWidth = resultWidth() - 30;
+											// Keybind hint (if present)
+											const keybindHint = result.keybindHint || "";
+											const keybindWidth =
+												keybindHint.length > 0 ? keybindHint.length + 2 : 0;
+
+											const maxLabelWidth = resultWidth() - 30 - keybindWidth;
 											const label = () =>
 												result.label.length > maxLabelWidth
 													? `${result.label.slice(0, maxLabelWidth - 1)}\u2026`
 													: result.label;
 
 											const description = result.description || "";
-											const maxDescWidth = 25;
+											const maxDescWidth = 20;
 											const desc =
 												description.length > maxDescWidth
 													? `${description.slice(0, maxDescWidth - 1)}\u2026`
@@ -147,7 +152,11 @@ export function CommandPalette(props: CommandPaletteProps): JSX.Element {
 												" ".repeat(
 													Math.max(
 														1,
-														resultWidth() - label().length - desc.length - 4,
+														resultWidth() -
+															label().length -
+															desc.length -
+															keybindWidth -
+															4,
 													),
 												);
 
@@ -165,6 +174,17 @@ export function CommandPalette(props: CommandPaletteProps): JSX.Element {
 													>
 														{getIcon(result.type)} {label()}
 														{spacing()}
+													</text>
+													<Show when={keybindHint}>
+														<text fg={colors.fgMuted} wrapMode="none">
+															{keybindHint}
+															{"  "}
+														</text>
+													</Show>
+													<text
+														fg={isSelected() ? colors.fgDim : colors.fgMuted}
+														wrapMode="none"
+													>
 														{desc}
 													</text>
 												</box>

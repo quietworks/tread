@@ -3,6 +3,11 @@ import { homedir } from "node:os";
 import { dirname, join } from "node:path";
 import { parse } from "smol-toml";
 import type { Config, FeedConfig, ThemeColors, ThemeConfig } from "./types.js";
+import {
+	DEFAULT_KEYBINDINGS,
+	type CommandKeybindings,
+	type KeybindingsConfig,
+} from "../keybindings/types.js";
 
 function getConfigDir(): string {
 	const xdgConfig = process.env.XDG_CONFIG_HOME;
@@ -39,6 +44,55 @@ url = "https://techcrunch.com/feed/"
 # [theme.colors]
 # primary = "#ff79c6"
 # accent = "#8be9fd"
+
+# Keybindings Configuration (optional)
+# Customize keyboard shortcuts for navigation and actions
+# Format: key can be a simple key ("j"), arrow key ("down"), ctrl combo ("C-c"),
+#         sequence ("gg" for double-g), or leader combo ("<leader>r")
+# Available modifiers: C- (ctrl), M- (meta/cmd), S- (shift)
+# Capital letters automatically imply shift (e.g., "G" = shift+g)
+
+# [keybindings.global]
+# quit = ["q"]
+# force_quit = ["C-c"]
+# command_palette = [":"]
+# navigate_down = ["j", "down"]
+# navigate_up = ["k", "up"]
+# jump_top = ["gg"]
+# jump_bottom = ["G"]
+# leader = ["space"]  # Optional leader key for command sequences
+
+# [keybindings.feeds]
+# select = ["l", "right", "enter"]
+# refresh = ["r"]
+# refresh_all = ["R"]
+# next_pane = ["tab"]
+
+# [keybindings.articles]
+# prev_pane = ["h", "left"]
+# select = ["l", "right", "enter"]
+# refresh = ["r"]
+# next_pane = ["tab"]
+
+# [keybindings.article]
+# back = ["h", "left"]
+# open_browser = ["o"]
+# scroll_up = ["k", "up"]
+# scroll_down = ["j", "down"]
+# page_up = ["C-u"]
+# page_down = ["C-d", "space"]
+# jump_top = ["gg"]
+# jump_bottom = ["G"]
+# next_pane = ["tab"]
+
+# Command-specific keybindings (optional)
+# Commands reference these keys by name
+# Use <leader> prefix for leader-based shortcuts (requires leader key above)
+# [keybindings.commands]
+# add_feed = ["<leader>a"]
+# refresh_all = ["<leader>r"]
+# reload_config = ["<leader>c"]
+# quit = ["<leader>q"]
 `;
 
 export function getConfigPath(): string {
@@ -188,5 +242,77 @@ export function loadConfig(): Config {
 		}
 	}
 
-	return { feeds: validatedFeeds, theme };
+	// Parse keybindings (optional, falls back to defaults)
+	const keybindings = parseKeybindings(parsed.keybindings);
+
+	return { feeds: validatedFeeds, theme, keybindings };
+}
+
+/**
+ * Parse command keybindings section
+ * Unlike pane keybindings, this allows arbitrary keys
+ */
+function parseCommandKeybindings(commandsRaw: unknown): CommandKeybindings {
+	if (!commandsRaw || typeof commandsRaw !== "object") {
+		return {};
+	}
+
+	const commands = commandsRaw as Record<string, unknown>;
+	const result: CommandKeybindings = {};
+
+	for (const [key, value] of Object.entries(commands)) {
+		if (Array.isArray(value) && value.every((v) => typeof v === "string")) {
+			result[key] = value;
+		}
+	}
+
+	return result;
+}
+
+/**
+ * Parse and validate keybindings from config
+ * Merges user config with defaults
+ */
+function parseKeybindings(
+	keybindingsRaw: unknown,
+): KeybindingsConfig | undefined {
+	// If no keybindings in config, return undefined (will use defaults)
+	if (!keybindingsRaw || typeof keybindingsRaw !== "object") {
+		return undefined;
+	}
+
+	const kb = keybindingsRaw as Record<string, unknown>;
+
+	// Helper to parse a keybinding group
+	function parseGroup<T extends { [K in keyof T]: string[] }>(
+		groupRaw: unknown,
+		defaults: T,
+	): T {
+		if (!groupRaw || typeof groupRaw !== "object") {
+			return defaults;
+		}
+
+		const group = groupRaw as Record<string, unknown>;
+		const result = { ...defaults };
+
+		for (const key of Object.keys(defaults) as Array<keyof T>) {
+			const value = group[key as string];
+			if (Array.isArray(value)) {
+				// Validate all entries are strings
+				if (value.every((v) => typeof v === "string")) {
+					result[key] = value as T[keyof T];
+				}
+			}
+		}
+
+		return result;
+	}
+
+	return {
+		global: parseGroup(kb.global, DEFAULT_KEYBINDINGS.global),
+		feeds: parseGroup(kb.feeds, DEFAULT_KEYBINDINGS.feeds),
+		articles: parseGroup(kb.articles, DEFAULT_KEYBINDINGS.articles),
+		article: parseGroup(kb.article, DEFAULT_KEYBINDINGS.article),
+		commands: parseCommandKeybindings(kb.commands),
+	};
 }

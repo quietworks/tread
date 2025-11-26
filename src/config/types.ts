@@ -1,3 +1,5 @@
+import type { KeybindingsConfig } from "../keybindings/types.js";
+
 export interface FeedConfig {
 	name: string;
 	url: string;
@@ -28,4 +30,5 @@ export interface ThemeConfig {
 export interface Config {
 	feeds: FeedConfig[];
 	theme?: ThemeConfig;
+	keybindings?: KeybindingsConfig;
 }

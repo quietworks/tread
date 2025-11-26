@@ -35,7 +35,7 @@ describe("htmlToText", () => {
 
 	test("decodes common HTML entities", () => {
 		const html = "&lt;div&gt; &amp; &quot;test&quot; &apos;test&apos;";
-		expect(htmlToText(html)).toBe('<div> & "test" \'test\'');
+		expect(htmlToText(html)).toBe("<div> & \"test\" 'test'");
 	});
 
 	test("decodes special character entities", () => {

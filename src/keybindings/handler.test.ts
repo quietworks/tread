@@ -393,7 +393,9 @@ describe("KeybindingHandler - Command palette", () => {
 	});
 
 	test("multi-character sequence inputs (paste)", () => {
-		const action = handler.handleKey(createKeyEvent("abc", { sequence: "abc" }));
+		const action = handler.handleKey(
+			createKeyEvent("abc", { sequence: "abc" }),
+		);
 		expect(action?.type).toBe("commandPaletteInput");
 		if (action?.type === "commandPaletteInput") {
 			expect(action.char).toBe("abc");
@@ -401,7 +403,9 @@ describe("KeybindingHandler - Command palette", () => {
 	});
 
 	test("rejects non-printable sequences", () => {
-		const action = handler.handleKey(createKeyEvent("test", { sequence: "\x1b[A" }));
+		const action = handler.handleKey(
+			createKeyEvent("test", { sequence: "\x1b[A" }),
+		);
 		expect(action).toBeNull();
 	});
 

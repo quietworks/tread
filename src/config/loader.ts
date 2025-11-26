@@ -2,7 +2,7 @@ import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { homedir } from "node:os";
 import { dirname, join } from "node:path";
 import { parse } from "smol-toml";
-import type { Config, FeedConfig } from "./types.js";
+import type { Config, FeedConfig, ThemeColors, ThemeConfig } from "./types.js";
 
 function getConfigDir(): string {
 	const xdgConfig = process.env.XDG_CONFIG_HOME;
@@ -29,6 +29,16 @@ url = "https://lobste.rs/rss"
 [[feeds]]
 name = "TechCrunch"
 url = "https://techcrunch.com/feed/"
+
+# Theme configuration (optional)
+# Available themes: tokyo-night, dracula, nord
+# [theme]
+# name = "tokyo-night"
+
+# You can also override individual colors:
+# [theme.colors]
+# primary = "#ff79c6"
+# accent = "#8be9fd"
 `;
 
 export function getConfigPath(): string {
@@ -92,5 +102,48 @@ export function loadConfig(): Config {
 		};
 	});
 
-	return { feeds: validatedFeeds };
+	// Parse optional theme configuration
+	let theme: ThemeConfig | undefined;
+	if (parsed.theme && typeof parsed.theme === "object") {
+		const t = parsed.theme as Record<string, unknown>;
+		theme = {};
+
+		if (typeof t.name === "string") {
+			theme.name = t.name;
+		}
+
+		if (t.colors && typeof t.colors === "object") {
+			const c = t.colors as Record<string, unknown>;
+			const colors: ThemeColors = {};
+
+			const colorKeys: (keyof ThemeColors)[] = [
+				"bg",
+				"bgLight",
+				"bgHighlight",
+				"fg",
+				"fgDim",
+				"fgMuted",
+				"primary",
+				"secondary",
+				"accent",
+				"success",
+				"warning",
+				"error",
+				"border",
+				"borderFocused",
+			];
+
+			for (const key of colorKeys) {
+				if (typeof c[key] === "string") {
+					colors[key] = c[key] as string;
+				}
+			}
+
+			if (Object.keys(colors).length > 0) {
+				theme.colors = colors;
+			}
+		}
+	}
+
+	return { feeds: validatedFeeds, theme };
 }

@@ -1,12 +1,12 @@
 #!/usr/bin/env node
 
-import { loadConfig, getConfigPath, initConfig } from "./config/loader.js";
-import type { Config } from "./config/types.js";
-import { getDatabase, closeDatabase } from "./db/database.js";
-import { App } from "./app.js";
-
 // Import version from package.json - embedded at compile time for standalone binaries
 import pkg from "../package.json";
+import { App } from "./app.js";
+import { getConfigPath, initConfig, loadConfig } from "./config/loader.js";
+import type { Config } from "./config/types.js";
+import { closeDatabase, getDatabase } from "./db/database.js";
+
 const { version, description } = pkg;
 
 const NAME = "tread";

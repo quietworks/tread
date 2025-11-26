@@ -1,10 +1,10 @@
 import {
 	BoxRenderable,
-	TextRenderable,
 	type RenderContext,
+	TextRenderable,
 } from "@opentui/core";
-import { colors } from "./theme.js";
 import type { FeedConfig } from "../config/types.js";
+import { colors } from "./theme.js";
 
 export interface FeedListItem {
 	feed: FeedConfig;
@@ -114,7 +114,7 @@ export class FeedList extends BoxRenderable {
 				contentWidth - indicator.length - unreadStr.length - 1;
 			const name =
 				item.feed.name.length > maxNameWidth
-					? item.feed.name.slice(0, maxNameWidth - 1) + "\u2026"
+					? `${item.feed.name.slice(0, maxNameWidth - 1)}\u2026`
 					: item.feed.name;
 
 			const text = new TextRenderable(this._ctx, {

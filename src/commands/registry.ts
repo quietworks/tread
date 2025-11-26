@@ -1,5 +1,5 @@
-import type { Command } from "../search/types.js";
 import type { App } from "../app.js";
+import type { Command } from "../search/types.js";
 
 export function getCommands(app: App): Command[] {
 	return [

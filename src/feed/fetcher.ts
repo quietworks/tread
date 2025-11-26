@@ -1,5 +1,5 @@
-import { parseFeed } from "./parser.js";
 import { upsertArticle } from "../db/articles.js";
+import { parseFeed } from "./parser.js";
 import type { ParsedFeed } from "./types.js";
 
 const USER_AGENT = "Tread/0.1.0 (RSS Reader)";

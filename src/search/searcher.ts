@@ -1,8 +1,8 @@
+import type { FeedConfig } from "../config/types.js";
+import type { Article } from "../db/types.js";
 import { rankMatches } from "./fuzzy.js";
 import type { Command, SearchResult, SearchWeights } from "./types.js";
 import { DEFAULT_WEIGHTS } from "./types.js";
-import type { FeedConfig } from "../config/types.js";
-import type { Article } from "../db/types.js";
 
 export class Searcher {
 	private commands: Command[];

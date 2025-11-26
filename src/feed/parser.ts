@@ -1,6 +1,6 @@
-import { XMLParser } from "fast-xml-parser";
 import { createHash } from "node:crypto";
-import type { ParsedFeed, FeedItem } from "./types.js";
+import { XMLParser } from "fast-xml-parser";
+import type { FeedItem, ParsedFeed } from "./types.js";
 
 const parser = new XMLParser({
 	ignoreAttributes: false,
@@ -17,7 +17,7 @@ function parseDate(dateStr: string | undefined | null): Date | null {
 	if (!dateStr) return null;
 
 	const date = new Date(dateStr);
-	return isNaN(date.getTime()) ? null : date;
+	return Number.isNaN(date.getTime()) ? null : date;
 }
 
 function getTextContent(node: unknown): string {

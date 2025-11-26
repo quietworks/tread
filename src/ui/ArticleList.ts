@@ -1,11 +1,11 @@
 import {
 	BoxRenderable,
-	TextRenderable,
 	type RenderContext,
+	TextRenderable,
 } from "@opentui/core";
-import { colors } from "./theme.js";
 import type { Article } from "../db/types.js";
 import { truncate } from "../utils/html.js";
+import { colors } from "./theme.js";
 
 export class ArticleList extends BoxRenderable {
 	private articles: Article[] = [];

@@ -246,11 +246,11 @@ describe("KeybindingHandler - Articles pane", () => {
 		expect(action?.type).toBe("refresh");
 	});
 
-	test("tab goes back to feeds", () => {
+	test("tab cycles to article pane", () => {
 		const action = handler.handleKey(createKeyEvent("tab"));
 		expect(action?.type).toBe("focusPane");
 		if (action?.type === "focusPane") {
-			expect(action.pane).toBe("feeds");
+			expect(action.pane).toBe("article");
 		}
 	});
 });
@@ -276,6 +276,14 @@ describe("KeybindingHandler - Article pane", () => {
 	test("o opens in browser", () => {
 		const action = handler.handleKey(createKeyEvent("o"));
 		expect(action?.type).toBe("openInBrowser");
+	});
+
+	test("tab cycles to feeds pane", () => {
+		const action = handler.handleKey(createKeyEvent("tab"));
+		expect(action?.type).toBe("focusPane");
+		if (action?.type === "focusPane") {
+			expect(action.pane).toBe("feeds");
+		}
 	});
 
 	test("Ctrl+D page scrolls down", () => {

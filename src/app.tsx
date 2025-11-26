@@ -1,9 +1,14 @@
 import { exec } from "node:child_process";
 import { platform } from "node:os";
 import { createSignal, createMemo, batch, onMount } from "solid-js";
-import { render, useKeyboard, useTerminalDimensions } from "@opentui/solid";
+import {
+	render,
+	useKeyboard,
+	usePaste,
+	useTerminalDimensions,
+} from "@opentui/solid";
 import type { JSX } from "@opentui/solid";
-import type { KeyEvent } from "@opentui/core";
+import type { KeyEvent, PasteEvent } from "@opentui/core";
 import { getCommands } from "./commands/registry.js";
 import type { Config, FeedConfig } from "./config/types.js";
 import {
@@ -27,8 +32,9 @@ import {
 	CommandPalette,
 	type FeedListItem,
 	type Pane,
+	type ScrollBoxRenderable,
 } from "./ui/components/index.js";
-import { ThemeProvider, layout } from "./ui/theme/index.js";
+import { ThemeProvider } from "./ui/theme/index.js";
 
 interface AppProps {
 	config: Config;
@@ -73,6 +79,9 @@ function AppContent(props: AppProps): JSX.Element {
 
 	// Keybinding handler
 	const keybindingHandler = new KeybindingHandler();
+
+	// Article view scroll ref
+	let articleScrollRef: ScrollBoxRenderable | undefined;
 
 	// App commands for Searcher
 	const appCommands = {
@@ -256,6 +265,12 @@ function AppContent(props: AppProps): JSX.Element {
 					if (article) {
 						setSelectedArticle(article);
 					}
+				} else if (currentPane() === "article" && articleScrollRef) {
+					if (action.target === "top") {
+						articleScrollRef.scrollTo(0);
+					} else {
+						articleScrollRef.scrollTo(Number.MAX_SAFE_INTEGER);
+					}
 				}
 				break;
 
@@ -284,6 +299,27 @@ function AppContent(props: AppProps): JSX.Element {
 				} else if (currentPane() === "articles") {
 					setCurrentPane("feeds");
 					keybindingHandler.setPane("feeds");
+				}
+				break;
+
+			case "focusPane":
+				setCurrentPane(action.pane);
+				keybindingHandler.setPane(action.pane);
+				break;
+
+			case "scroll":
+				if (articleScrollRef) {
+					const amount =
+						action.direction === "up" ? -action.amount : action.amount;
+					articleScrollRef.scrollBy(amount);
+				}
+				break;
+
+			case "pageScroll":
+				if (articleScrollRef) {
+					const pageAmount = articleScrollRef.height - 4;
+					const amount = action.direction === "up" ? -pageAmount : pageAmount;
+					articleScrollRef.scrollBy(amount);
 				}
 				break;
 
@@ -481,6 +517,27 @@ function AppContent(props: AppProps): JSX.Element {
 		}
 	}
 
+	function handlePaste(event: PasteEvent): void {
+		// Normalize line endings for Windows compatibility
+		const text = event.text.replace(/\r\n/g, "\n").replace(/\r/g, "\n");
+
+		if (commandPaletteMode() === "form") {
+			const fields = formFields();
+			const idx = currentFieldIndex();
+			if (fields[idx]) {
+				const newValue = fields[idx].value + text;
+				const newFields = fields.map((f, i) =>
+					i === idx ? { ...f, value: newValue } : f,
+				);
+				setFormFields(newFields);
+			}
+		} else {
+			const newQuery = commandPaletteQuery() + text;
+			setCommandPaletteQuery(newQuery);
+			performSearch(newQuery);
+		}
+	}
+
 	// Initial load
 	onMount(async () => {
 		updateFeedList();
@@ -506,6 +563,13 @@ function AppContent(props: AppProps): JSX.Element {
 	// Keyboard handling
 	useKeyboard((event: KeyEvent) => {
 		handleKeyDown(event);
+	});
+
+	// Paste handling (only active when command palette is open)
+	usePaste((event: PasteEvent) => {
+		if (commandPaletteOpen()) {
+			handlePaste(event);
+		}
 	});
 
 	return (
@@ -536,6 +600,7 @@ function AppContent(props: AppProps): JSX.Element {
 						article={selectedArticle()}
 						isFocused={currentPane() === "article"}
 						height="60%"
+						scrollRef={(r) => (articleScrollRef = r)}
 					/>
 				</box>
 			</box>

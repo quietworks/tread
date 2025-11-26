@@ -17,7 +17,12 @@ function createKeyEvent(
 		ctrl: options.ctrl ?? false,
 		meta: options.meta ?? false,
 		shift: options.shift ?? false,
-	};
+		option: false,
+		number: false,
+		raw: options.sequence ?? name,
+		eventType: "press",
+		source: "raw",
+	} as KeyEvent;
 }
 
 describe("KeybindingHandler - Global keybindings", () => {

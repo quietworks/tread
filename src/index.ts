@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 
 import { loadConfig, getConfigPath, initConfig } from "./config/loader.js";
+import type { Config } from "./config/types.js";
 import { getDatabase, closeDatabase } from "./db/database.js";
 import { App } from "./app.js";
 
@@ -76,7 +77,7 @@ async function main(): Promise<void> {
 		process.exit(exitCode);
 	}
 	// Load configuration
-	let config;
+	let config: Config;
 	try {
 		config = loadConfig();
 	} catch (error) {

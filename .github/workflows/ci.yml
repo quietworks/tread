@@ -20,7 +20,7 @@ jobs:
           bun-version-file: ".bun-version"
 
       - name: Setup just
-        uses: extractions/setup-just@v2
+        uses: extractions/setup-just@v3
 
       - name: Install dependencies
         run: bun install --frozen-lockfile

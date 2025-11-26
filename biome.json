@@ -16,6 +16,9 @@
 		"enabled": true,
 		"rules": {
 			"recommended": true,
+			"correctness": {
+				"noUnusedPrivateClassMembers": "off"
+			},
 			"style": {
 				"noNonNullAssertion": "off"
 			}

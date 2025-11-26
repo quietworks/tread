@@ -35,26 +35,30 @@ bun test --coverage  # Run tests with coverage
 
 ## Architecture
 
-The application uses OpenTUI for terminal rendering with a component-based architecture:
+The application uses OpenTUI with Solid.js for terminal rendering with a reactive component-based architecture:
 
-- **App** (`src/app.ts`): Main orchestrator that manages UI layout, coordinates between components, handles keyboard input dispatching, and maintains application state (current pane, selected feed/article)
+- **App** (`src/app.tsx`): Main orchestrator using Solid.js signals for state management. Handles keyboard input dispatching, coordinates between components, and manages application state (current pane, selected feed/article)
 - **KeybindingHandler** (`src/keybindings/handler.ts`): Translates raw keyboard events into typed actions, handles vim sequences like `gg`, manages pane-specific keybinding contexts
-- **UI Components** (`src/ui/`): Extend OpenTUI's `BoxRenderable` - FeedList, ArticleList, ArticleView each manage their own rendering and selection state
+- **UI Components** (`src/ui/components/`): Solid.js JSX components - FeedList, ArticleList, ArticleView, StatusBar, CommandPalette
+- **Theme System** (`src/ui/theme/`): ThemeProvider context with 4 built-in themes (tokyo-night, dracula, nord, gruvbox) and custom color overrides
 - **Database Layer** (`src/db/`): Uses Bun's built-in SQLite (`bun:sqlite`) with WAL mode for article persistence and read tracking
 - **Feed Parser** (`src/feed/parser.ts`): Handles both RSS 2.0 and Atom feeds using fast-xml-parser
+- **Markdown Renderer** (`src/utils/markdown.ts`): Converts HTML article content to terminal-friendly markdown using turndown
 
 ### Data Flow
 
 1. Config loaded from `~/.config/tread/config.toml` (TOML format via smol-toml)
 2. Feeds fetched → parsed → stored in SQLite at `~/.local/share/tread/tread.db`
-3. Keyboard events → KeybindingHandler → Action objects → App handles state changes → Components re-render
+3. ThemeProvider wraps app, providing colors via Solid.js context
+4. Keyboard events → KeybindingHandler → Action objects → App updates signals → Components reactively re-render
 
 ### Key Types
 
 - `Action` (`src/keybindings/actions.ts`): Discriminated union of all possible user actions
 - `Pane`: `"feeds" | "articles" | "article"` - the three UI panels
-- `FeedConfig` / `Config` (`src/config/types.ts`): TOML configuration structure
+- `FeedConfig` / `Config` (`src/config/types.ts`): TOML configuration structure with optional theme settings
 - `Article` (`src/db/types.ts`): Database record with read tracking
+- `ColorPalette` (`src/ui/theme/colors.ts`): Theme color definitions
 
 ## Code Style
 
@@ -88,7 +92,7 @@ The `TAP_GITHUB_TOKEN` secret must be configured in the tread repo settings. Thi
 
 ## Testing
 
-Tread uses Bun's built-in test runner with 157+ tests covering core functionality. See [TESTING.md](./TESTING.md) for the complete testing strategy.
+Tread uses Bun's built-in test runner. See [TESTING.md](./TESTING.md) for the complete testing strategy.
 
 ### Quick Start
 

@@ -1,6 +1,6 @@
 import type { KeyEvent } from "@opentui/core";
-import type { Action } from "./actions.js";
 import { logger } from "../logger.js";
+import type { Action } from "./actions.js";
 
 export type Pane = "feeds" | "articles" | "article";
 

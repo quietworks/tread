@@ -1,7 +1,7 @@
 import {
 	BoxRenderable,
-	TextRenderable,
 	type RenderContext,
+	TextRenderable,
 } from "@opentui/core";
 import { colors } from "./theme.js";
 
@@ -20,7 +20,6 @@ export class StatusBar extends BoxRenderable {
 	private statusText: TextRenderable;
 	private keybindsText: TextRenderable;
 	private currentPane: Pane = "feeds";
-	private message: string = "";
 
 	constructor(ctx: RenderContext, width: number) {
 		super(ctx, {

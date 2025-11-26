@@ -16,10 +16,10 @@
  *   GET /health                - Health check
  */
 
-import { readFileSync, existsSync } from "node:fs";
-import { join, dirname } from "node:path";
+import { existsSync, readFileSync } from "node:fs";
+import { dirname, join } from "node:path";
 
-const PORT = Number(process.env["PORT"]) || 3333;
+const PORT = Number(process.env.PORT) || 3333;
 const FIXTURES_DIR = dirname(import.meta.path);
 
 const server = Bun.serve({

@@ -1,13 +1,13 @@
 import {
 	BoxRenderable,
-	TextRenderable,
+	type PasteEvent,
 	type RenderContext,
 	RGBA,
-	type PasteEvent,
+	TextRenderable,
 } from "@opentui/core";
-import { colors } from "./theme.js";
-import type { SearchResult } from "../search/types.js";
 import { logger } from "../logger.js";
+import type { SearchResult } from "../search/types.js";
+import { colors } from "./theme.js";
 
 export class CommandPalette extends BoxRenderable {
 	private dimLayer!: BoxRenderable;
@@ -228,13 +228,13 @@ export class CommandPalette extends BoxRenderable {
 			text,
 			textLength: text.length,
 			currentFieldIndex: this.currentFieldIndex,
-			currentValue: this.formFields[this.currentFieldIndex]!.value,
+			currentValue: this.formFields[this.currentFieldIndex]?.value,
 		});
 
 		// Handle both single characters and pasted text
 		this.formFields[this.currentFieldIndex]!.value += text;
 		logger.debug("Updated field value", {
-			newValue: this.formFields[this.currentFieldIndex]!.value,
+			newValue: this.formFields[this.currentFieldIndex]?.value,
 		});
 		this.renderForm();
 	}
@@ -367,14 +367,14 @@ export class CommandPalette extends BoxRenderable {
 				const maxLabelWidth = resultWidth - 30; // Reserve space for description
 				const label =
 					result.label.length > maxLabelWidth
-						? result.label.slice(0, maxLabelWidth - 1) + "…"
+						? `${result.label.slice(0, maxLabelWidth - 1)}…`
 						: result.label;
 
 				const description = result.description || "";
 				const maxDescWidth = 25;
 				const desc =
 					description.length > maxDescWidth
-						? description.slice(0, maxDescWidth - 1) + "…"
+						? `${description.slice(0, maxDescWidth - 1)}…`
 						: description;
 
 				// Calculate spacing

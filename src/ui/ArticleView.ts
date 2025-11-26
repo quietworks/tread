@@ -1,18 +1,17 @@
 import {
 	BoxRenderable,
-	TextRenderable,
-	ScrollBoxRenderable,
 	type RenderContext,
+	ScrollBoxRenderable,
+	TextRenderable,
 } from "@opentui/core";
-import { colors } from "./theme.js";
 import type { Article } from "../db/types.js";
 import { htmlToText, wrapText } from "../utils/html.js";
+import { colors } from "./theme.js";
 
 export class ArticleView extends BoxRenderable {
 	private article: Article | null = null;
 	private scrollBox: ScrollBoxRenderable;
 	private contentBox: BoxRenderable;
-	private _isFocused = false;
 
 	constructor(ctx: RenderContext, width: number, height: number) {
 		super(ctx, {
@@ -179,7 +178,7 @@ export class ArticleView extends BoxRenderable {
 		const maxTitleWidth = this.width - 4;
 		const displayTitle =
 			this.article.title.length > maxTitleWidth
-				? this.article.title.slice(0, maxTitleWidth - 1) + "\u2026"
+				? `${this.article.title.slice(0, maxTitleWidth - 1)}\u2026`
 				: this.article.title;
 		this.title = ` ${displayTitle} `;
 

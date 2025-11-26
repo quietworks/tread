@@ -1,7 +1,7 @@
-import { parse } from "smol-toml";
-import { readFileSync, writeFileSync, existsSync, mkdirSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { homedir } from "node:os";
-import { join, dirname } from "node:path";
+import { dirname, join } from "node:path";
+import { parse } from "smol-toml";
 import type { Config, FeedConfig } from "./types.js";
 
 function getConfigDir(): string {

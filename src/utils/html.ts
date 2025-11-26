@@ -66,7 +66,7 @@ export function truncate(text: string, maxLength: number): string {
 	if (text.length <= maxLength) {
 		return text;
 	}
-	return text.slice(0, maxLength - 1) + "\u2026";
+	return `${text.slice(0, maxLength - 1)}\u2026`;
 }
 
 export function wrapText(text: string, width: number): string[] {
@@ -86,7 +86,7 @@ export function wrapText(text: string, width: number): string[] {
 			if (currentLine.length === 0) {
 				currentLine = word;
 			} else if (currentLine.length + 1 + word.length <= width) {
-				currentLine += " " + word;
+				currentLine += ` ${word}`;
 			} else {
 				lines.push(currentLine);
 				currentLine = word;

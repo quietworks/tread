@@ -1,33 +1,32 @@
-import {
-	BoxRenderable,
-	createCliRenderer,
-	type CliRenderer,
-	type KeyEvent,
-} from "@opentui/core";
 import { exec } from "node:child_process";
 import { platform } from "node:os";
-
+import {
+	BoxRenderable,
+	type CliRenderer,
+	createCliRenderer,
+	type KeyEvent,
+} from "@opentui/core";
+import { getCommands } from "./commands/registry.js";
 import type { Config, FeedConfig } from "./config/types.js";
 import {
-	getArticlesByFeed,
 	getAllArticles,
+	getArticlesByFeed,
 	getUnreadCount,
 	markAsRead,
 } from "./db/articles.js";
-import { fetchAndStoreFeed, fetchAllFeeds } from "./feed/fetcher.js";
-import { FeedList, type FeedListItem } from "./ui/FeedList.js";
+import type { Article } from "./db/types.js";
+import { fetchAllFeeds, fetchAndStoreFeed } from "./feed/fetcher.js";
+import type { Action } from "./keybindings/actions.js";
+import { KeybindingHandler } from "./keybindings/handler.js";
+import { logger } from "./logger.js";
+import { Searcher } from "./search/searcher.js";
+import type { Command } from "./search/types.js";
 import { ArticleList } from "./ui/ArticleList.js";
 import { ArticleView } from "./ui/ArticleView.js";
-import { StatusBar, type Pane } from "./ui/StatusBar.js";
 import { CommandPalette } from "./ui/CommandPalette.js";
-import { KeybindingHandler } from "./keybindings/handler.js";
-import type { Action } from "./keybindings/actions.js";
+import { FeedList, type FeedListItem } from "./ui/FeedList.js";
+import { type Pane, StatusBar } from "./ui/StatusBar.js";
 import { colors, layout } from "./ui/theme.js";
-import type { Article } from "./db/types.js";
-import { Searcher } from "./search/searcher.js";
-import { getCommands } from "./commands/registry.js";
-import type { SearchResult, Command } from "./search/types.js";
-import { logger } from "./logger.js";
 
 export class App {
 	private renderer!: CliRenderer;
@@ -166,7 +165,7 @@ export class App {
 			} else {
 				this.statusBar.clearMessage();
 			}
-		} catch (error) {
+		} catch (_error) {
 			this.statusBar.showError("Failed to refresh feeds");
 		}
 
@@ -320,7 +319,7 @@ export class App {
 				}
 				break;
 
-			case "articles":
+			case "articles": {
 				if (direction === "up") {
 					this.articleList.moveUp();
 				} else {
@@ -332,6 +331,7 @@ export class App {
 					this.articleView.setArticle(article);
 				}
 				break;
+			}
 		}
 	}
 
@@ -345,7 +345,7 @@ export class App {
 				}
 				break;
 
-			case "articles":
+			case "articles": {
 				if (target === "top") {
 					this.articleList.moveToTop();
 				} else {
@@ -356,6 +356,7 @@ export class App {
 					this.articleView.setArticle(article);
 				}
 				break;
+			}
 
 			case "article":
 				if (target === "top") {
@@ -369,21 +370,23 @@ export class App {
 
 	private selectCurrent(): void {
 		switch (this.currentPane) {
-			case "feeds":
+			case "feeds": {
 				const feed = this.feedList.getSelectedFeed();
 				if (feed) {
 					this.selectFeed(feed);
 					this.focusPane("articles");
 				}
 				break;
+			}
 
-			case "articles":
+			case "articles": {
 				const article = this.articleList.getSelectedArticle();
 				if (article) {
 					this.selectArticle(article);
 					this.focusPane("article");
 				}
 				break;
+			}
 		}
 	}
 
@@ -457,7 +460,7 @@ export class App {
 
 			this.statusBar.showSuccess(`Refreshed ${feed.name}`);
 			setTimeout(() => this.statusBar.clearMessage(), 2000);
-		} catch (error) {
+		} catch (_error) {
 			this.statusBar.showError(`Failed to refresh ${feed.name}`);
 		}
 	}
@@ -481,7 +484,7 @@ export class App {
 				this.statusBar.showSuccess("All feeds refreshed");
 				setTimeout(() => this.statusBar.clearMessage(), 2000);
 			}
-		} catch (error) {
+		} catch (_error) {
 			this.statusBar.showError("Failed to refresh feeds");
 		}
 	}
@@ -631,23 +634,26 @@ export class App {
 		if (!result) return;
 
 		switch (result.type) {
-			case "command":
+			case "command": {
 				const command = result.data as Command;
 				// Execute command first - it may want to keep palette open (e.g., for forms)
 				command.execute();
 				break;
+			}
 
-			case "feed":
+			case "feed": {
 				this.closeCommandPalette();
 				const feed = result.data as FeedConfig;
 				this.navigateToFeed(feed);
 				break;
+			}
 
-			case "article":
+			case "article": {
 				this.closeCommandPalette();
 				const article = result.data as Article;
 				this.navigateToArticle(article);
 				break;
+			}
 		}
 	}
 

@@ -1,7 +1,7 @@
 import { Database } from "bun:sqlite";
-import { mkdirSync, existsSync } from "node:fs";
+import { existsSync, mkdirSync } from "node:fs";
 import { homedir } from "node:os";
-import { join, dirname } from "node:path";
+import { dirname, join } from "node:path";
 
 function getDataDir(): string {
 	const xdgData = process.env.XDG_DATA_HOME;

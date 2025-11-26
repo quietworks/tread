@@ -59,6 +59,49 @@ export function initConfig(): { created: boolean; path: string } {
 	return { created: true, path: CONFIG_PATH };
 }
 
+export function saveConfig(config: Config): void {
+	const tomlContent = buildConfigToml(config);
+	mkdirSync(dirname(CONFIG_PATH), { recursive: true });
+	writeFileSync(CONFIG_PATH, tomlContent, "utf-8");
+}
+
+export function buildConfigToml(config: Config): string {
+	const lines: string[] = [
+		"# Tread RSS Reader Configuration",
+		"# Add your feeds below. Each feed needs a name and url.",
+		"",
+	];
+
+	// Feeds section
+	for (const feed of config.feeds) {
+		lines.push("[[feeds]]");
+		lines.push(`name = ${JSON.stringify(feed.name)}`);
+		lines.push(`url = ${JSON.stringify(feed.url)}`);
+		lines.push("");
+	}
+
+	// Theme section (optional)
+	if (config.theme) {
+		if (config.theme.name) {
+			lines.push("[theme]");
+			lines.push(`name = ${JSON.stringify(config.theme.name)}`);
+			lines.push("");
+		}
+
+		if (config.theme.colors && Object.keys(config.theme.colors).length > 0) {
+			lines.push("[theme.colors]");
+			for (const [key, value] of Object.entries(config.theme.colors)) {
+				if (value) {
+					lines.push(`${key} = ${JSON.stringify(value)}`);
+				}
+			}
+			lines.push("");
+		}
+	}
+
+	return lines.join("\n");
+}
+
 export function loadConfig(): Config {
 	if (!existsSync(CONFIG_PATH)) {
 		throw new Error(

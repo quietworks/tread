@@ -1,5 +1,7 @@
 import { describe, expect, test } from "bun:test";
 import { parse } from "smol-toml";
+import { buildConfigToml } from "./loader.js";
+import type { Config } from "./types.js";
 
 // We test loadConfig logic by testing the parsing and validation directly
 // without relying on file system (which would require mocking or temp files)
@@ -206,5 +208,110 @@ url = "https://techcrunch.com/feed/"
 		for (const url of urls) {
 			expect(() => new URL(url)).not.toThrow();
 		}
+	});
+});
+
+describe("buildConfigToml", () => {
+	test("serializes feeds correctly", () => {
+		const config: Config = {
+			feeds: [
+				{ name: "Test Feed", url: "https://example.com/feed" },
+				{ name: "Another Feed", url: "https://other.com/rss" },
+			],
+		};
+
+		const toml = buildConfigToml(config);
+		const parsed = parse(toml);
+
+		expect(parsed.feeds).toHaveLength(2);
+		const feeds = parsed.feeds as Array<{ name: string; url: string }>;
+		expect(feeds[0]?.name).toBe("Test Feed");
+		expect(feeds[0]?.url).toBe("https://example.com/feed");
+		expect(feeds[1]?.name).toBe("Another Feed");
+		expect(feeds[1]?.url).toBe("https://other.com/rss");
+	});
+
+	test("roundtrip: config survives serialize -> parse", () => {
+		const original: Config = {
+			feeds: [
+				{ name: "Hacker News", url: "https://hnrss.org/frontpage" },
+				{ name: "Lobsters", url: "https://lobste.rs/rss" },
+			],
+		};
+
+		const toml = buildConfigToml(original);
+		const parsed = parse(toml);
+
+		expect(parsed.feeds).toHaveLength(2);
+		const feeds = parsed.feeds as Array<{ name: string; url: string }>;
+		expect(feeds[0]?.name).toBe(original.feeds[0]?.name);
+		expect(feeds[0]?.url).toBe(original.feeds[0]?.url);
+		expect(feeds[1]?.name).toBe(original.feeds[1]?.name);
+		expect(feeds[1]?.url).toBe(original.feeds[1]?.url);
+	});
+
+	test("escapes special characters in feed names", () => {
+		const config: Config = {
+			feeds: [{ name: 'Feed with "quotes"', url: "https://example.com/feed" }],
+		};
+
+		const toml = buildConfigToml(config);
+		expect(() => parse(toml)).not.toThrow();
+
+		const parsed = parse(toml);
+		const feeds = parsed.feeds as Array<{ name: string; url: string }>;
+		expect(feeds[0]?.name).toBe('Feed with "quotes"');
+	});
+
+	test("serializes theme name", () => {
+		const config: Config = {
+			feeds: [{ name: "Test", url: "https://example.com/feed" }],
+			theme: { name: "dracula" },
+		};
+
+		const toml = buildConfigToml(config);
+		const parsed = parse(toml);
+
+		expect((parsed.theme as { name: string })?.name).toBe("dracula");
+	});
+
+	test("serializes theme colors", () => {
+		const config: Config = {
+			feeds: [{ name: "Test", url: "https://example.com/feed" }],
+			theme: {
+				colors: {
+					primary: "#ff79c6",
+					accent: "#8be9fd",
+				},
+			},
+		};
+
+		const toml = buildConfigToml(config);
+		const parsed = parse(toml);
+
+		const theme = parsed.theme as {
+			colors: { primary: string; accent: string };
+		};
+		expect(theme?.colors?.primary).toBe("#ff79c6");
+		expect(theme?.colors?.accent).toBe("#8be9fd");
+	});
+
+	test("includes header comment", () => {
+		const config: Config = {
+			feeds: [{ name: "Test", url: "https://example.com/feed" }],
+		};
+
+		const toml = buildConfigToml(config);
+		expect(toml).toContain("# Tread RSS Reader Configuration");
+	});
+
+	test("handles empty theme gracefully", () => {
+		const config: Config = {
+			feeds: [{ name: "Test", url: "https://example.com/feed" }],
+			theme: {},
+		};
+
+		const toml = buildConfigToml(config);
+		expect(() => parse(toml)).not.toThrow();
 	});
 });

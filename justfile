@@ -21,6 +21,10 @@ check:
 fmt:
     bun run format
 
+# Format a single file
+fmt-file file:
+    bunx biome format --write "{{file}}"
+
 # Check formatting without writing
 fmt-check:
     bun run format:check

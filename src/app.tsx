@@ -10,6 +10,7 @@ import {
 import type { JSX } from "@opentui/solid";
 import type { KeyEvent, PasteEvent } from "@opentui/core";
 import { getCommands } from "./commands/registry.js";
+import { saveConfig } from "./config/loader.js";
 import type { Config, FeedConfig } from "./config/types.js";
 import {
 	getAllArticles,
@@ -184,6 +185,7 @@ function AppContent(props: AppProps): JSX.Element {
 		}
 
 		props.config.feeds.push({ name: name.trim(), url: url.trim() });
+		saveConfig(props.config);
 		closeCommandPalette();
 		setStatusMessage(`Added feed: ${name}`);
 		setTimeout(() => setStatusMessage(undefined), 2000);

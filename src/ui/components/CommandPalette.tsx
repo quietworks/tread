@@ -1,6 +1,6 @@
 import { For, Show, createMemo } from "solid-js";
 import type { JSX } from "@opentui/solid";
-import { RGBA, type PasteEvent } from "@opentui/core";
+import { RGBA } from "@opentui/core";
 import type { SearchResult } from "../../search/types.js";
 import { useTheme } from "../theme/index.js";
 
@@ -15,7 +15,6 @@ export interface CommandPaletteProps {
 	formTitle?: string;
 	formFields?: Array<{ label: string; value: string }>;
 	currentFieldIndex?: number;
-	onPaste?: (event: PasteEvent) => void;
 }
 
 function getIcon(type: SearchResult["type"]): string {
@@ -68,7 +67,6 @@ export function CommandPalette(props: CommandPaletteProps): JSX.Element {
 				position="absolute"
 				left={0}
 				top={0}
-				onPaste={props.onPaste}
 			>
 				{/* Dim layer */}
 				<box

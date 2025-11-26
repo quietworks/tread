@@ -9,7 +9,10 @@
 		"start": "bun run src/index.ts",
 		"dev": "bun --watch run src/index.ts",
 		"format": "biome format --write .",
-		"format:check": "biome format ."
+		"format:check": "biome format .",
+		"test": "bun test",
+		"test:watch": "bun test --watch",
+		"test:coverage": "bun test --coverage"
 	},
 	"dependencies": {
 		"@opentui/core": "^0.1.50",

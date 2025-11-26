@@ -1,6 +1,6 @@
 import { exec } from "node:child_process";
 import { platform } from "node:os";
-import { createSignal, createMemo, batch, onMount } from "solid-js";
+import { createSignal, onMount } from "solid-js";
 import {
 	render,
 	useKeyboard,
@@ -21,7 +21,6 @@ import type { Article } from "./db/types.js";
 import { fetchAllFeeds, fetchAndStoreFeed } from "./feed/fetcher.js";
 import type { Action } from "./keybindings/actions.js";
 import { KeybindingHandler } from "./keybindings/handler.js";
-import { logger } from "./logger.js";
 import { Searcher } from "./search/searcher.js";
 import type { Command, SearchResult } from "./search/types.js";
 import {
@@ -600,7 +599,9 @@ function AppContent(props: AppProps): JSX.Element {
 						article={selectedArticle()}
 						isFocused={currentPane() === "article"}
 						height="60%"
-						scrollRef={(r) => (articleScrollRef = r)}
+						scrollRef={(r) => {
+							articleScrollRef = r;
+						}}
 					/>
 				</box>
 			</box>

@@ -9,17 +9,7 @@ export interface ArticleViewProps {
 	article: Article | null;
 	isFocused: boolean;
 	height?: number | `${number}%`;
-	onScrollUp?: (lines?: number) => void;
-	onScrollDown?: (lines?: number) => void;
-}
-
-export interface ArticleViewRef {
-	scrollUp: (lines?: number) => void;
-	scrollDown: (lines?: number) => void;
-	scrollToTop: () => void;
-	scrollToBottom: () => void;
-	pageUp: () => void;
-	pageDown: () => void;
+	scrollRef?: (ref: ScrollBoxRenderable) => void;
 }
 
 function formatPublishDate(date: Date | null): string {
@@ -31,26 +21,16 @@ function formatPublishDate(date: Date | null): string {
 	});
 }
 
-function truncateTitle(title: string, maxWidth: number): string {
-	if (title.length <= maxWidth) return title;
-	return `${title.slice(0, maxWidth - 1)}\u2026`;
-}
-
 export function ArticleView(props: ArticleViewProps): JSX.Element {
 	const { colors, syntax } = useTheme();
 	let scrollRef: ScrollBoxRenderable | undefined;
-
-	const title = createMemo(() => {
-		if (!props.article) return " Article ";
-		return ` ${truncateTitle(props.article.title, 60)} `;
-	});
 
 	const markdownContent = createMemo(() => {
 		if (!props.article?.content) return "";
 		return htmlToMarkdown(props.article.content);
 	});
 
-	// Expose scroll methods via ref callback pattern
+	// Expose scroll ref to parent and reset scroll on article change
 	createEffect(() => {
 		if (props.article && scrollRef) {
 			scrollRef.scrollTo(0);
@@ -64,7 +44,6 @@ export function ArticleView(props: ArticleViewProps): JSX.Element {
 			border={true}
 			borderColor={props.isFocused ? colors.borderFocused : colors.border}
 			backgroundColor={colors.bg}
-			title={title()}
 			flexGrow={1}
 		>
 			<Show
@@ -76,7 +55,10 @@ export function ArticleView(props: ArticleViewProps): JSX.Element {
 				}
 			>
 				<scrollbox
-					ref={(r: ScrollBoxRenderable) => (scrollRef = r)}
+					ref={(r: ScrollBoxRenderable) => {
+						scrollRef = r;
+						props.scrollRef?.(r);
+					}}
 					scrollbarOptions={{ visible: false }}
 				>
 					<box flexDirection="column" paddingLeft={1} paddingRight={1}>
@@ -114,33 +96,4 @@ export function ArticleView(props: ArticleViewProps): JSX.Element {
 			</Show>
 		</box>
 	);
-}
-
-// Helper hook to get scroll functions
-export function createArticleViewRef(): {
-	ref: ScrollBoxRenderable | undefined;
-	setRef: (r: ScrollBoxRenderable) => void;
-	scrollUp: (lines?: number) => void;
-	scrollDown: (lines?: number) => void;
-	scrollToTop: () => void;
-	scrollToBottom: () => void;
-	pageUp: () => void;
-	pageDown: () => void;
-} {
-	let ref: ScrollBoxRenderable | undefined;
-
-	return {
-		get ref() {
-			return ref;
-		},
-		setRef: (r: ScrollBoxRenderable) => {
-			ref = r;
-		},
-		scrollUp: (lines = 1) => ref?.scrollBy(-lines),
-		scrollDown: (lines = 1) => ref?.scrollBy(lines),
-		scrollToTop: () => ref?.scrollTo(0),
-		scrollToBottom: () => ref?.scrollTo(ref.scrollHeight),
-		pageUp: () => ref?.scrollBy(-(ref.height - 4)),
-		pageDown: () => ref?.scrollBy(ref.height - 4),
-	};
 }

@@ -60,8 +60,8 @@ export class KeybindingHandler {
 			return this.handleCommandPaletteKey(key);
 		}
 
-		// Handle gg sequence
-		if (keyName === "g" && !key.ctrl && !key.meta) {
+		// Handle gg sequence (lowercase g only, not Shift+G)
+		if (keyName === "g" && !key.shift && !key.ctrl && !key.meta) {
 			if (this.pendingG) {
 				this.clearPendingG();
 				return { type: "jump", target: "top" };
@@ -183,7 +183,7 @@ export class KeybindingHandler {
 		}
 
 		if (keyName === "tab") {
-			return { type: "focusPane", pane: "feeds" };
+			return { type: "focusPane", pane: "article" };
 		}
 
 		return null;
@@ -191,6 +191,10 @@ export class KeybindingHandler {
 
 	private handleArticlePane(key: KeyEvent): Action | null {
 		const keyName = key.name;
+
+		if (keyName === "tab") {
+			return { type: "focusPane", pane: "feeds" };
+		}
 
 		if (keyName === "h" || keyName === "left") {
 			return { type: "back" };

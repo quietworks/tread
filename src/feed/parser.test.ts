@@ -360,14 +360,18 @@ describe("parseFeed - Atom", () => {
 
 	test("throws error for missing feed element", () => {
 		const xml = `<?xml version="1.0"?><root></root>`;
-		expect(() => parseFeed(xml)).toThrow("Unknown feed format: not RSS or Atom");
+		expect(() => parseFeed(xml)).toThrow(
+			"Unknown feed format: not RSS or Atom",
+		);
 	});
 });
 
 describe("parseFeed - Error Handling", () => {
 	test("throws error for unknown feed format", () => {
 		const xml = `<?xml version="1.0"?><unknown></unknown>`;
-		expect(() => parseFeed(xml)).toThrow("Unknown feed format: not RSS or Atom");
+		expect(() => parseFeed(xml)).toThrow(
+			"Unknown feed format: not RSS or Atom",
+		);
 	});
 
 	test("handles malformed XML", () => {

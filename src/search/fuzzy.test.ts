@@ -132,32 +132,20 @@ describe("rankMatches", () => {
 	];
 
 	test("ranks items by fuzzy match score", () => {
-		const results = rankMatches(
-			"test",
-			items,
-			(item) => item.name,
-		);
+		const results = rankMatches("test", items, (item) => item.name);
 
 		expect(results.length).toBeGreaterThan(0);
 		expect(results[0]?.item.name).toBe("test");
 	});
 
 	test("filters out non-matching items", () => {
-		const results = rankMatches(
-			"xyz",
-			items,
-			(item) => item.name,
-		);
+		const results = rankMatches("xyz", items, (item) => item.name);
 
 		expect(results).toHaveLength(0);
 	});
 
 	test("sorts by score descending", () => {
-		const results = rankMatches(
-			"est",
-			items,
-			(item) => item.name,
-		);
+		const results = rankMatches("est", items, (item) => item.name);
 
 		for (let i = 1; i < results.length; i++) {
 			expect(results[i - 1]!.score).toBeGreaterThanOrEqual(results[i]!.score);
@@ -165,49 +153,27 @@ describe("rankMatches", () => {
 	});
 
 	test("applies weight to scores", () => {
-		const weight1 = rankMatches(
-			"test",
-			items,
-			(item) => item.name,
-			1.0,
-		);
-		const weight2 = rankMatches(
-			"test",
-			items,
-			(item) => item.name,
-			2.0,
-		);
+		const weight1 = rankMatches("test", items, (item) => item.name, 1.0);
+		const weight2 = rankMatches("test", items, (item) => item.name, 2.0);
 
 		expect(weight2[0]?.score).toBe((weight1[0]?.score ?? 0) * 2);
 	});
 
 	test("includes match indices in results", () => {
-		const results = rankMatches(
-			"tst",
-			items,
-			(item) => item.name,
-		);
+		const results = rankMatches("tst", items, (item) => item.name);
 
 		expect(results[0]?.indices).toBeDefined();
 		expect(Array.isArray(results[0]?.indices)).toBe(true);
 	});
 
 	test("handles empty items array", () => {
-		const results = rankMatches<TestItem>(
-			"test",
-			[],
-			(item) => item.name,
-		);
+		const results = rankMatches<TestItem>("test", [], (item) => item.name);
 
 		expect(results).toHaveLength(0);
 	});
 
 	test("handles empty query", () => {
-		const results = rankMatches(
-			"",
-			items,
-			(item) => item.name,
-		);
+		const results = rankMatches("", items, (item) => item.name);
 
 		// Empty query matches everything with score 0
 		expect(results.length).toBe(items.length);
@@ -215,22 +181,14 @@ describe("rankMatches", () => {
 	});
 
 	test("uses custom search string extractor", () => {
-		const results = rankMatches(
-			"5",
-			items,
-			(item) => item.value.toString(),
-		);
+		const results = rankMatches("5", items, (item) => item.value.toString());
 
 		expect(results.length).toBe(1);
 		expect(results[0]?.item.value).toBe(5);
 	});
 
 	test("ranks exact matches higher than partial", () => {
-		const results = rankMatches(
-			"test",
-			items,
-			(item) => item.name,
-		);
+		const results = rankMatches("test", items, (item) => item.name);
 
 		expect(results[0]?.item.name).toBe("test");
 		expect(results[0]?.score).toBeGreaterThan(results[1]?.score ?? 0);
@@ -242,11 +200,7 @@ describe("rankMatches", () => {
 			{ name: "testx", value: 2 },
 		];
 
-		const results = rankMatches(
-			"test",
-			testItems,
-			(item) => item.name,
-		);
+		const results = rankMatches("test", testItems, (item) => item.name);
 
 		expect(results[0]?.item.name).toBe("testx");
 	});

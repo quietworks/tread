@@ -31,7 +31,7 @@ name = "TechCrunch"
 url = "https://techcrunch.com/feed/"
 
 # Theme configuration (optional)
-# Available themes: tokyo-night, dracula, nord
+# Available themes: tokyo-night, dracula, nord, gruvbox
 # [theme]
 # name = "tokyo-night"
 

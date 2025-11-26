@@ -59,6 +59,15 @@ url = "https://lobste.rs/rss"
 [[feeds]]
 name = "The Pragmatic Engineer"
 url = "https://newsletter.pragmaticengineer.com/feed"
+
+# Theme configuration (optional)
+[theme]
+name = "tokyo-night"  # Options: tokyo-night, dracula, nord, gruvbox
+
+# Or override individual colors:
+# [theme.colors]
+# primary = "#ff79c6"
+# accent = "#8be9fd"
 ```
 
 ## Keybindings
@@ -83,6 +92,7 @@ url = "https://newsletter.pragmaticengineer.com/feed"
 | `r` | Refresh current feed |
 | `R` | Refresh all feeds |
 | `o` | Open article in browser |
+| `:` | Open command palette |
 | `q` | Quit / go back |
 | `Ctrl+C` | Quit |
 

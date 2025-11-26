@@ -16,6 +16,8 @@ just run             # Run the application
 just dev             # Run with watch mode (auto-restart on changes)
 just check           # Type-check the project
 just fmt             # Format code
+just test            # Run tests
+just test-coverage   # Run tests with coverage
 just screenshot      # Generate README screenshot (requires vhs)
 just release X.Y.Z   # Create a new release
 ```
@@ -27,6 +29,8 @@ bun install          # Install dependencies
 bun run start        # Run the application
 bun run dev          # Run with watch mode (auto-restart on changes)
 bun run build        # Type-check the project (no emit)
+bun test             # Run tests
+bun test --coverage  # Run tests with coverage
 ```
 
 ## Architecture
@@ -83,6 +87,26 @@ This will:
 The `TAP_GITHUB_TOKEN` secret must be configured in the tread repo settings. This is a fine-grained PAT with Contents (read/write) permission on `quietworks/homebrew-tread`.
 
 ## Testing
+
+Tread uses Bun's built-in test runner with 157+ tests covering core functionality. See [TESTING.md](./TESTING.md) for the complete testing strategy.
+
+### Quick Start
+
+```bash
+just test              # Run all tests
+just test-coverage     # Run with coverage report
+just test-watch        # Watch mode
+```
+
+### Test Coverage
+
+- **Feed Parser**: RSS 2.0 and Atom parsing, error handling, edge cases (75 tests)
+- **HTML Utilities**: Text conversion, entity decoding, wrapping (32 tests)
+- **Fuzzy Search**: Matching algorithm, ranking, scoring (31 tests)
+- **Keybindings**: Pane navigation, vim sequences, command palette (16 tests)
+- **Config Loader**: TOML parsing and validation (3 tests)
+
+Tests are co-located with source files (`*.test.ts`) and use fixtures from `test/fixtures/`.
 
 ### Mock Feed Server
 

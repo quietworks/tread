@@ -25,6 +25,18 @@ fmt:
 fmt-check:
     bun run format:check
 
+# Run tests
+test:
+    bun test
+
+# Run tests with coverage
+test-coverage:
+    bun test --coverage
+
+# Run tests in watch mode
+test-watch:
+    bun test --watch
+
 # Start mock feed server for testing
 serve-mock:
     bun run test/fixtures/serve.ts

@@ -9,6 +9,7 @@ export class KeybindingHandler {
 	private pendingG = false;
 	private gTimeout: ReturnType<typeof setTimeout> | null = null;
 	private isCommandPaletteMode = false;
+	private isFormMode = false;
 
 	setPane(pane: Pane): void {
 		this.currentPane = pane;
@@ -17,6 +18,13 @@ export class KeybindingHandler {
 
 	setCommandPaletteMode(active: boolean): void {
 		this.isCommandPaletteMode = active;
+		if (!active) {
+			this.isFormMode = false;
+		}
+	}
+
+	setFormMode(active: boolean): void {
+		this.isFormMode = active;
 	}
 
 	private clearPendingG(): void {
@@ -201,13 +209,61 @@ export class KeybindingHandler {
 			name: keyName,
 			sequence: key.sequence,
 			length: key.sequence?.length,
+			isFormMode: this.isFormMode,
 		});
 
 		if (keyName === "escape") {
 			return { type: "closeCommandPalette" };
 		}
 
-		// Tab navigation (without shift = down, with shift = up)
+		// In form mode, only handle escape, tab, enter, and backspace specially
+		// Everything else should be text input
+		if (this.isFormMode) {
+			if (keyName === "tab") {
+				return {
+					type: "commandPaletteNavigate",
+					direction: key.shift ? "up" : "down",
+				};
+			}
+
+			if (keyName === "return" || keyName === "linefeed") {
+				return { type: "commandPaletteSelect" };
+			}
+
+			if (keyName === "backspace") {
+				return { type: "commandPaletteBackspace" };
+			}
+
+			// Arrow keys for field navigation
+			if (keyName === "up" || keyName === "down") {
+				return {
+					type: "commandPaletteNavigate",
+					direction: keyName as "up" | "down",
+				};
+			}
+
+			// All other keys are text input in form mode
+			// Use sequence first (contains actual character), fall back to keyName for single chars
+			const char = key.sequence ?? (keyName?.length === 1 ? keyName : null);
+			if (char && char.length >= 1 && !key.ctrl && !key.meta) {
+				// Check if all characters are printable ASCII
+				let isPrintable = true;
+				for (let i = 0; i < char.length; i++) {
+					const code = char.charCodeAt(i);
+					if (code < 32 || code >= 127) {
+						isPrintable = false;
+						break;
+					}
+				}
+				if (isPrintable) {
+					return { type: "commandPaletteInput", char };
+				}
+			}
+
+			return null;
+		}
+
+		// Search mode navigation
 		if (keyName === "tab") {
 			return {
 				type: "commandPaletteNavigate",

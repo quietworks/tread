@@ -2,7 +2,7 @@
 
 // Import version from package.json - embedded at compile time for standalone binaries
 import pkg from "../package.json";
-import { App } from "./app.js";
+import { startApp } from "./app.js";
 import { getConfigPath, initConfig, loadConfig } from "./config/loader.js";
 import type { Config } from "./config/types.js";
 import { closeDatabase, getDatabase } from "./db/database.js";
@@ -98,9 +98,6 @@ async function main(): Promise<void> {
 		process.exit(1);
 	}
 
-	// Create and start the app
-	const app = new App(config);
-
 	// Handle cleanup
 	const cleanup = () => {
 		closeDatabase();
@@ -117,7 +114,9 @@ async function main(): Promise<void> {
 	});
 
 	try {
-		await app.start();
+		await startApp(config);
+		cleanup();
+		process.exit(0);
 	} catch (error) {
 		console.error("Application error:", error);
 		cleanup();

@@ -1,7 +1,13 @@
-import type { App } from "../app.js";
 import type { Command } from "../search/types.js";
 
-export function getCommands(app: App): Command[] {
+export interface AppCommands {
+	quit: () => void;
+	refreshAllFeeds: () => Promise<void>;
+	openAddFeedForm: () => void;
+	closeCommandPaletteFromCommand: () => void;
+}
+
+export function getCommands(app: AppCommands): Command[] {
 	return [
 		{
 			id: "add-feed",

@@ -13,7 +13,9 @@
 		"allowSyntheticDefaultImports": true,
 		"forceConsistentCasingInFileNames": true,
 		"noUncheckedIndexedAccess": true,
-		"noEmit": true
+		"noEmit": true,
+		"jsx": "preserve",
+		"jsxImportSource": "@opentui/solid"
 	},
 	"include": ["src/**/*"],
 	"exclude": ["node_modules", "dist"]

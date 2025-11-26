@@ -2,6 +2,26 @@
 	"name": "tread",
 	"version": "0.4.0",
 	"description": "A fast, keyboard-driven TUI RSS reader",
+	"keywords": [
+		"rss",
+		"atom",
+		"feed",
+		"reader",
+		"tui",
+		"terminal",
+		"cli",
+		"keyboard"
+	],
+	"author": "Quiet Works",
+	"license": "MIT",
+	"homepage": "https://github.com/quietworks/tread#readme",
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/quietworks/tread.git"
+	},
+	"bugs": {
+		"url": "https://github.com/quietworks/tread/issues"
+	},
 	"type": "module",
 	"main": "dist/index.js",
 	"scripts": {

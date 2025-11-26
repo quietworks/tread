@@ -4,7 +4,7 @@ import { homedir } from "node:os";
 import { join, dirname } from "node:path";
 
 function getDataDir(): string {
-	const xdgData = process.env["XDG_DATA_HOME"];
+	const xdgData = process.env.XDG_DATA_HOME;
 	if (xdgData) {
 		return join(xdgData, "tread");
 	}

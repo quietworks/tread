@@ -32,7 +32,7 @@ class Logger {
 		const formatted = `[${timestamp}] [${level.toUpperCase()}] ${message}`;
 
 		if (this.logFile) {
-			const fs = require("fs");
+			const fs = require("node:fs");
 			const fullMessage =
 				args.length > 0
 					? `${formatted} ${JSON.stringify(args)}\n`

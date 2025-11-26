@@ -5,7 +5,7 @@ import { join, dirname } from "node:path";
 import type { Config, FeedConfig } from "./types.js";
 
 function getConfigDir(): string {
-	const xdgConfig = process.env["XDG_CONFIG_HOME"];
+	const xdgConfig = process.env.XDG_CONFIG_HOME;
 	if (xdgConfig) {
 		return join(xdgConfig, "tread");
 	}

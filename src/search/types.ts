@@ -1,5 +1,6 @@
 import type { FeedConfig } from "../config/types.js";
 import type { Article } from "../db/types.js";
+import type { Pane } from "../keybindings/handler.js";
 
 export type SearchResultType = "command" | "feed" | "article";
 
@@ -7,6 +8,12 @@ export interface Command {
 	id: string;
 	name: string;
 	description: string;
+	/** References config key in keybindings.commands */
+	keybind?: string;
+	/** Optional pane restriction (default: all panes) */
+	panes?: Pane[];
+	/** Whether command is disabled */
+	disabled?: boolean | (() => boolean);
 	execute: () => void | Promise<void>;
 }
 
@@ -18,6 +25,8 @@ export interface SearchResult {
 	score: number;
 	matchedIn?: "title" | "content";
 	data: Command | FeedConfig | Article;
+	/** Formatted keybind hint for display (e.g., "ctrl+a") */
+	keybindHint?: string;
 }
 
 export interface SearchWeights {

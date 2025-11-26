@@ -1,3 +1,4 @@
+import { commandRegistry } from "../commands/registry.js";
 import type { FeedConfig } from "../config/types.js";
 import type { Article } from "../db/types.js";
 import { rankMatches } from "./fuzzy.js";
@@ -38,6 +39,9 @@ export class Searcher {
 		);
 
 		for (const match of commandMatches) {
+			const keybindHint = commandRegistry.getCommandKeybindDisplay(
+				match.item.id,
+			);
 			results.push({
 				type: "command",
 				label: match.item.name,
@@ -45,6 +49,7 @@ export class Searcher {
 				weight: this.weights.commands,
 				score: match.score,
 				data: match.item,
+				keybindHint,
 			});
 		}
 

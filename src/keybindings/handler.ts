@@ -1,8 +1,17 @@
 import type { KeyEvent } from "@opentui/core";
+import { commandRegistry } from "../commands/registry.js";
 import { logger } from "../logger.js";
 import type { Action } from "./actions.js";
+import {
+	DEFAULT_KEYBINDINGS,
+	type KeybindingsConfig,
+	parseKeybinding,
+} from "./types.js";
 
 export type Pane = "feeds" | "articles" | "article";
+
+/** Default leader key timeout in milliseconds */
+const LEADER_TIMEOUT_MS = 2000;
 
 export class KeybindingHandler {
 	private currentPane: Pane = "feeds";
@@ -10,10 +19,29 @@ export class KeybindingHandler {
 	private gTimeout: ReturnType<typeof setTimeout> | null = null;
 	private isCommandPaletteMode = false;
 	private isFormMode = false;
+	private keybindings: KeybindingsConfig;
+
+	// Leader key state
+	private leaderActive = false;
+	private leaderTimeout: ReturnType<typeof setTimeout> | null = null;
+
+	constructor(keybindings?: KeybindingsConfig) {
+		this.keybindings = keybindings || DEFAULT_KEYBINDINGS;
+	}
+
+	setKeybindings(keybindings: KeybindingsConfig): void {
+		this.keybindings = keybindings;
+		this.clearPendingG();
+		this.clearLeader();
+	}
 
 	setPane(pane: Pane): void {
 		this.currentPane = pane;
 		this.clearPendingG();
+	}
+
+	getCurrentPane(): Pane {
+		return this.currentPane;
 	}
 
 	setCommandPaletteMode(active: boolean): void {
@@ -21,10 +49,34 @@ export class KeybindingHandler {
 		if (!active) {
 			this.isFormMode = false;
 		}
+		this.clearLeader();
 	}
 
 	setFormMode(active: boolean): void {
 		this.isFormMode = active;
+	}
+
+	isLeaderActive(): boolean {
+		return this.leaderActive;
+	}
+
+	private activateLeader(): void {
+		this.leaderActive = true;
+		if (this.leaderTimeout) {
+			clearTimeout(this.leaderTimeout);
+		}
+		this.leaderTimeout = setTimeout(() => {
+			this.leaderActive = false;
+			this.leaderTimeout = null;
+		}, LEADER_TIMEOUT_MS);
+	}
+
+	private clearLeader(): void {
+		this.leaderActive = false;
+		if (this.leaderTimeout) {
+			clearTimeout(this.leaderTimeout);
+			this.leaderTimeout = null;
+		}
 	}
 
 	private clearPendingG(): void {
@@ -33,6 +85,119 @@ export class KeybindingHandler {
 			clearTimeout(this.gTimeout);
 			this.gTimeout = null;
 		}
+	}
+
+	/**
+	 * Check if a key event matches any of the given keybindings
+	 */
+	private matchesAny(key: KeyEvent, bindings: string[]): boolean {
+		for (const binding of bindings) {
+			if (this.matchesKeybinding(key, binding)) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	/**
+	 * Check if a key event matches a specific keybinding
+	 */
+	private matchesKeybinding(key: KeyEvent, binding: string): boolean {
+		const parsed = parseKeybinding(binding);
+
+		// Handle sequences (like "gg")
+		if (parsed.isSequence) {
+			// For now, sequences are handled separately in handleKey
+			return false;
+		}
+
+		// Check leader state - if keybind requires leader, leader must be active
+		if (parsed.leader && !this.leaderActive) {
+			return false;
+		}
+		// If keybind doesn't require leader but leader is active, don't match
+		// (so regular bindings don't fire when in leader mode)
+		if (!parsed.leader && this.leaderActive) {
+			return false;
+		}
+
+		// Check modifiers (ctrl and meta)
+		if (parsed.ctrl !== (key.ctrl || false)) return false;
+		if (parsed.meta !== (key.meta || false)) return false;
+
+		// Handle special case: "enter" can match both "return" and "linefeed"
+		if (parsed.key === "enter") {
+			return key.name === "return" || key.name === "linefeed";
+		}
+
+		// Handle special case: ":" needs to check both name and sequence
+		if (parsed.key === ":") {
+			return key.name === ":" || key.sequence === ":";
+		}
+
+		// For capital letters in config (e.g., "G", "R"), match directly against name or sequence
+		// This handles the case where terminal sends name="G" regardless of shift flag
+		const originalKey = parsed.leader
+			? binding.replace(/^<leader>/i, "")
+			: binding;
+		if (originalKey.length === 1 && originalKey >= "A" && originalKey <= "Z") {
+			return key.name === originalKey || key.sequence === originalKey;
+		}
+
+		// For other keys, check shift modifier and compare key name
+		if (parsed.shift !== (key.shift || false)) return false;
+		return key.name === parsed.key;
+	}
+
+	/**
+	 * Check if any of the bindings contain a sequence (like "gg")
+	 */
+	private hasSequence(bindings: string[]): boolean {
+		return bindings.some((b) => parseKeybinding(b).isSequence);
+	}
+
+	/**
+	 * Check if key matches the configured leader key
+	 */
+	private matchesLeaderKey(key: KeyEvent): boolean {
+		const leaderBindings = this.keybindings.global.leader;
+		if (!leaderBindings || leaderBindings.length === 0) {
+			// No default leader key - must be explicitly configured
+			return false;
+		}
+		// Check without leader state consideration
+		for (const binding of leaderBindings) {
+			const parsed = parseKeybinding(binding);
+			if (parsed.isSequence) continue;
+
+			if (parsed.ctrl !== (key.ctrl || false)) continue;
+			if (parsed.meta !== (key.meta || false)) continue;
+
+			if (key.name === parsed.key) return true;
+		}
+		return false;
+	}
+
+	/**
+	 * Check if key matches any registered command keybind
+	 */
+	private checkCommandKeybinds(key: KeyEvent): Action | null {
+		const commands = commandRegistry.getCommandsForPane(this.currentPane);
+
+		for (const cmd of commands) {
+			if (!cmd.keybind) continue;
+
+			const bindings = commandRegistry.getCommandKeybindings(cmd.id);
+			for (const binding of bindings) {
+				if (this.matchesKeybinding(key, binding)) {
+					// Clear leader state after matching
+					this.clearLeader();
+					return { type: "executeCommand", commandId: cmd.id };
+				}
+			}
+		}
+
+		return null;
 	}
 
 	handleKey(key: KeyEvent): Action | null {
@@ -44,13 +209,14 @@ export class KeybindingHandler {
 			meta: key.meta,
 			shift: key.shift,
 			isCommandPaletteMode: this.isCommandPaletteMode,
+			leaderActive: this.leaderActive,
 		});
 
 		// Check for command palette trigger (global)
-		// Note: ":" is shift+semicolon, check both keyName and sequence
 		if (
-			(keyName === ":" || key.sequence === ":") &&
-			!this.isCommandPaletteMode
+			!this.isCommandPaletteMode &&
+			!this.leaderActive &&
+			this.matchesAny(key, this.keybindings.global.command_palette)
 		) {
 			return { type: "openCommandPalette" };
 		}
@@ -60,25 +226,67 @@ export class KeybindingHandler {
 			return this.handleCommandPaletteKey(key);
 		}
 
-		// Handle gg sequence (lowercase g only, not Shift+G)
-		if (keyName === "g" && !key.shift && !key.ctrl && !key.meta) {
-			if (this.pendingG) {
-				this.clearPendingG();
-				return { type: "jump", target: "top" };
-			} else {
-				this.pendingG = true;
-				this.gTimeout = setTimeout(() => {
+		// Check for leader key activation (only when not already in leader mode)
+		if (!this.leaderActive && this.matchesLeaderKey(key)) {
+			this.activateLeader();
+			logger.debug("Leader mode activated");
+			return null;
+		}
+
+		// Check command keybinds (works in both normal and leader mode)
+		const commandAction = this.checkCommandKeybinds(key);
+		if (commandAction) {
+			return commandAction;
+		}
+
+		// If in leader mode and no command matched, clear leader on any other key
+		if (this.leaderActive) {
+			this.clearLeader();
+			logger.debug("Leader mode cancelled - no matching command");
+			return null;
+		}
+
+		// Handle "gg" sequence for jump_top
+		if (this.hasSequence(this.keybindings.global.jump_top)) {
+			if (keyName === "g" && !key.ctrl && !key.meta && !key.shift) {
+				if (this.pendingG) {
 					this.clearPendingG();
-				}, 500);
-				return null;
+					return { type: "jump", target: "top" };
+				} else {
+					this.pendingG = true;
+					this.gTimeout = setTimeout(() => {
+						this.clearPendingG();
+					}, 500);
+					return null;
+				}
+			}
+		}
+
+		// Handle "gg" sequence for article pane jump_top
+		if (
+			this.currentPane === "article" &&
+			this.hasSequence(this.keybindings.article.jump_top)
+		) {
+			if (keyName === "g" && !key.ctrl && !key.meta && !key.shift) {
+				if (this.pendingG) {
+					this.clearPendingG();
+					return { type: "jump", target: "top" };
+				} else {
+					this.pendingG = true;
+					this.gTimeout = setTimeout(() => {
+						this.clearPendingG();
+					}, 500);
+					return null;
+				}
 			}
 		}
 
 		// Clear pending g on any other key
 		this.clearPendingG();
 
-		// Global keybindings
-		if (keyName === "q") {
+		// Global keybindings - quit
+		// Special handling: "q" backs out of nested panes first
+		if (this.matchesAny(key, this.keybindings.global.quit)) {
 			if (this.currentPane === "article") {
 				return { type: "back" };
 			} else if (this.currentPane === "articles") {
@@ -87,41 +295,41 @@ export class KeybindingHandler {
 			return { type: "quit" };
 		}
 
-		if (key.name === "c" && key.ctrl) {
+		if (this.matchesAny(key, this.keybindings.global.force_quit)) {
 			return { type: "quit" };
 		}
 
-		// Navigation
-		if (keyName === "j" || keyName === "down") {
+		// Global navigation
+		if (this.matchesAny(key, this.keybindings.global.navigate_down)) {
 			if (this.currentPane === "article") {
-				return { type: "scroll", direction: "down", amount: 1 };
+				// In article pane, check scroll_down binding
+				if (this.matchesAny(key, this.keybindings.article.scroll_down)) {
+					return { type: "scroll", direction: "down", amount: 1 };
+				}
 			}
 			return { type: "navigate", direction: "down" };
 		}
 
-		if (keyName === "k" || keyName === "up") {
+		if (this.matchesAny(key, this.keybindings.global.navigate_up)) {
 			if (this.currentPane === "article") {
-				return { type: "scroll", direction: "up", amount: 1 };
+				// In article pane, check scroll_up binding
+				if (this.matchesAny(key, this.keybindings.article.scroll_up)) {
+					return { type: "scroll", direction: "up", amount: 1 };
+				}
 			}
 			return { type: "navigate", direction: "up" };
 		}
 
-		// Jump to bottom
-		if (keyName === "G" || (keyName === "g" && key.shift)) {
+		// Jump to bottom (global, but also check article-specific)
+		if (this.matchesAny(key, this.keybindings.global.jump_bottom)) {
 			return { type: "jump", target: "bottom" };
 		}
 
-		// Page scrolling (article view)
-		if (this.currentPane === "article") {
-			if (keyName === "d" && key.ctrl) {
-				return { type: "pageScroll", direction: "down" };
-			}
-			if (keyName === "u" && key.ctrl) {
-				return { type: "pageScroll", direction: "up" };
-			}
-			if (keyName === "space") {
-				return { type: "pageScroll", direction: "down" };
-			}
+		if (
+			this.currentPane === "article" &&
+			this.matchesAny(key, this.keybindings.article.jump_bottom)
+		) {
+			return { type: "jump", target: "bottom" };
 		}
 
 		// Pane-specific keybindings
@@ -136,26 +344,19 @@ export class KeybindingHandler {
 	}
 
 	private handleFeedsPane(key: KeyEvent): Action | null {
-		const keyName = key.name;
-
-		if (
-			keyName === "l" ||
-			keyName === "right" ||
-			keyName === "return" ||
-			keyName === "linefeed"
-		) {
+		if (this.matchesAny(key, this.keybindings.feeds.select)) {
 			return { type: "select" };
 		}
 
-		if (keyName === "r" && !key.shift) {
+		if (this.matchesAny(key, this.keybindings.feeds.refresh)) {
 			return { type: "refresh" };
 		}
 
-		if (keyName === "R" || (keyName === "r" && key.shift)) {
+		if (this.matchesAny(key, this.keybindings.feeds.refresh_all)) {
 			return { type: "refreshAll" };
 		}
 
-		if (keyName === "tab") {
+		if (this.matchesAny(key, this.keybindings.feeds.next_pane)) {
 			return { type: "focusPane", pane: "articles" };
 		}
 
@@ -163,26 +364,19 @@ export class KeybindingHandler {
 	}
 
 	private handleArticlesPane(key: KeyEvent): Action | null {
-		const keyName = key.name;
-
-		if (keyName === "h" || keyName === "left") {
+		if (this.matchesAny(key, this.keybindings.articles.prev_pane)) {
 			return { type: "focusPane", pane: "feeds" };
 		}
 
-		if (
-			keyName === "l" ||
-			keyName === "right" ||
-			keyName === "return" ||
-			keyName === "linefeed"
-		) {
+		if (this.matchesAny(key, this.keybindings.articles.select)) {
 			return { type: "select" };
 		}
 
-		if (keyName === "r" && !key.shift) {
+		if (this.matchesAny(key, this.keybindings.articles.refresh)) {
 			return { type: "refresh" };
 		}
 
-		if (keyName === "tab") {
+		if (this.matchesAny(key, this.keybindings.articles.next_pane)) {
 			return { type: "focusPane", pane: "article" };
 		}
 
@@ -190,18 +384,24 @@ export class KeybindingHandler {
 	}
 
 	private handleArticlePane(key: KeyEvent): Action | null {
-		const keyName = key.name;
-
-		if (keyName === "tab") {
-			return { type: "focusPane", pane: "feeds" };
-		}
-
-		if (keyName === "h" || keyName === "left") {
+		if (this.matchesAny(key, this.keybindings.article.back)) {
 			return { type: "back" };
 		}
 
-		if (keyName === "o") {
+		if (this.matchesAny(key, this.keybindings.article.open_browser)) {
 			return { type: "openInBrowser" };
+		}
+
+		if (this.matchesAny(key, this.keybindings.article.page_up)) {
+			return { type: "pageScroll", direction: "up" };
+		}
+
+		if (this.matchesAny(key, this.keybindings.article.page_down)) {
+			return { type: "pageScroll", direction: "down" };
+		}
+
+		if (this.matchesAny(key, this.keybindings.article.next_pane)) {
+			return { type: "focusPane", pane: "feeds" };
 		}
 
 		return null;

@@ -1,6 +1,6 @@
 import { exec } from "node:child_process";
 import { platform } from "node:os";
-import { createSignal, onMount } from "solid-js";
+import { createSignal, onMount, onCleanup } from "solid-js";
 import {
 	render,
 	useKeyboard,
@@ -9,9 +9,14 @@ import {
 } from "@opentui/solid";
 import type { JSX } from "@opentui/solid";
 import type { KeyEvent, PasteEvent } from "@opentui/core";
-import { getCommands } from "./commands/registry.js";
-import { saveConfig } from "./config/loader.js";
+import {
+	commandRegistry,
+	registerAppCommands,
+	getCommands,
+} from "./commands/registry.js";
+import { loadConfig, saveConfig } from "./config/loader.js";
 import type { Config, FeedConfig } from "./config/types.js";
+import { DEFAULT_KEYBINDINGS } from "./keybindings/types.js";
 import {
 	getAllArticles,
 	getArticlesByFeed,
@@ -77,8 +82,8 @@ function AppContent(props: AppProps): JSX.Element {
 		((values: Record<string, string>) => void) | null
 	>(null);
 
-	// Keybinding handler
-	const keybindingHandler = new KeybindingHandler();
+	// Keybinding handler (with optional custom keybindings from config)
+	const keybindingHandler = new KeybindingHandler(props.config.keybindings);
 
 	// Article view scroll ref
 	let articleScrollRef: ScrollBoxRenderable | undefined;
@@ -105,11 +110,41 @@ function AppContent(props: AppProps): JSX.Element {
 			keybindingHandler.setFormMode(false);
 			keybindingHandler.setCommandPaletteMode(false);
 		},
+		reloadConfig: () => {
+			try {
+				const newConfig = loadConfig();
+				const newKeybindings = newConfig.keybindings || DEFAULT_KEYBINDINGS;
+				// Update keybindings
+				keybindingHandler.setKeybindings(newKeybindings);
+				commandRegistry.setKeybindings(newKeybindings.commands);
+				// Update feeds in the config object (mutate in place since props.config is the same object)
+				props.config.feeds.length = 0;
+				props.config.feeds.push(...newConfig.feeds);
+				// Update feed list UI
+				updateFeedList();
+				setStatusMessage("Config reloaded");
+				setTimeout(() => setStatusMessage(undefined), 2000);
+			} catch (error) {
+				const message =
+					error instanceof Error ? error.message : "Unknown error";
+				setStatusMessage(`Failed to reload config: ${message}`);
+			}
+		},
 	};
+
+	// Register commands and set keybindings
+	const cleanupCommands = registerAppCommands(appCommands);
+	const keybindings = props.config.keybindings || DEFAULT_KEYBINDINGS;
+	commandRegistry.setKeybindings(keybindings.commands);
+
+	// Cleanup on unmount
+	onCleanup(() => {
+		cleanupCommands();
+	});
 
 	// Searcher
 	const searcher = new Searcher(
-		getCommands(appCommands),
+		commandRegistry.getCommands(),
 		props.config.feeds,
 		() => getAllArticles(),
 	);
@@ -515,6 +550,14 @@ function AppContent(props: AppProps): JSX.Element {
 					}
 				}
 				break;
+
+			case "executeCommand": {
+				const cmd = commandRegistry.getCommandById(action.commandId);
+				if (cmd) {
+					cmd.execute();
+				}
+				break;
+			}
 		}
 	}
 

@@ -38,8 +38,9 @@ bun test --coverage  # Run tests with coverage
 The application uses OpenTUI with Solid.js for terminal rendering with a reactive component-based architecture:
 
 - **App** (`src/app.tsx`): Main orchestrator using Solid.js signals for state management. Handles keyboard input dispatching, coordinates between components, and manages application state (current pane, selected feed/article)
-- **KeybindingHandler** (`src/keybindings/handler.ts`): Translates raw keyboard events into typed actions, handles vim sequences like `gg`, manages pane-specific keybinding contexts
-- **UI Components** (`src/ui/components/`): Solid.js JSX components - FeedList, ArticleList, ArticleView, StatusBar, CommandPalette
+- **KeybindingHandler** (`src/keybindings/handler.ts`): Translates raw keyboard events into typed actions, handles vim sequences like `gg`, manages pane-specific keybinding contexts, and supports leader key for command sequences
+- **CommandRegistry** (`src/commands/registry.ts`): Dynamic command registration system with keybind lookup, pane-aware filtering, and display formatting
+- **UI Components** (`src/ui/components/`): Solid.js JSX components - FeedList, ArticleList, ArticleView, StatusBar, CommandPalette (with keybind hints)
 - **Theme System** (`src/ui/theme/`): ThemeProvider context with 4 built-in themes (tokyo-night, dracula, nord, gruvbox) and custom color overrides
 - **Database Layer** (`src/db/`): Uses Bun's built-in SQLite (`bun:sqlite`) with WAL mode for article persistence and read tracking
 - **Feed Parser** (`src/feed/parser.ts`): Handles both RSS 2.0 and Atom feeds using fast-xml-parser
@@ -48,17 +49,33 @@ The application uses OpenTUI with Solid.js for terminal rendering with a reactiv
 ### Data Flow
 
 1. Config loaded from `~/.config/tread/config.toml` (TOML format via smol-toml)
-2. Feeds fetched → parsed → stored in SQLite at `~/.local/share/tread/tread.db`
-3. ThemeProvider wraps app, providing colors via Solid.js context
-4. Keyboard events → KeybindingHandler → Action objects → App updates signals → Components reactively re-render
+2. Commands registered with CommandRegistry, keybindings configured
+3. Feeds fetched → parsed → stored in SQLite at `~/.local/share/tread/tread.db`
+4. ThemeProvider wraps app, providing colors via Solid.js context
+5. Keyboard events → KeybindingHandler (checks leader mode, command keybinds) → Action objects → App updates signals → Components reactively re-render
 
 ### Key Types
 
-- `Action` (`src/keybindings/actions.ts`): Discriminated union of all possible user actions
+- `Action` (`src/keybindings/actions.ts`): Discriminated union of all possible user actions (includes `executeCommand`)
+- `Command` (`src/search/types.ts`): Command definition with keybind reference, pane restrictions, and disabled state
 - `Pane`: `"feeds" | "articles" | "article"` - the three UI panels
-- `FeedConfig` / `Config` (`src/config/types.ts`): TOML configuration structure with optional theme settings
+- `FeedConfig` / `Config` (`src/config/types.ts`): TOML configuration structure with optional theme and keybindings
+- `KeybindingsConfig` (`src/keybindings/types.ts`): Complete keybindings configuration including commands section
 - `Article` (`src/db/types.ts`): Database record with read tracking
 - `ColorPalette` (`src/ui/theme/colors.ts`): Theme color definitions
+
+### Keybinding System
+
+Tread supports multiple keybinding formats:
+- **Simple keys**: `"j"`, `"k"`, `"enter"`
+- **Modifiers**: `"C-c"` (ctrl), `"M-x"` (meta/cmd), `"S-a"` (shift) or `"A"` (capital = shift)
+- **Sequences**: `"gg"` (press g twice)
+- **Leader combos**: `"<leader>a"` (press leader key, then a)
+
+Keybindings are configured in three sections:
+- **Pane keybindings**: `[keybindings.global]`, `[keybindings.feeds]`, `[keybindings.articles]`, `[keybindings.article]`
+- **Command keybindings**: `[keybindings.commands]` - maps command IDs to shortcuts
+- **Leader key**: `[keybindings.global] leader = ["space"]` - optional, enables `<leader>` prefix
 
 ## Code Style
 
@@ -104,11 +121,11 @@ just test-watch        # Watch mode
 
 ### Test Coverage
 
-- **Feed Parser**: RSS 2.0 and Atom parsing, error handling, edge cases (75 tests)
-- **HTML Utilities**: Text conversion, entity decoding, wrapping (32 tests)
-- **Fuzzy Search**: Matching algorithm, ranking, scoring (31 tests)
-- **Keybindings**: Pane navigation, vim sequences, command palette (16 tests)
-- **Config Loader**: TOML parsing and validation (3 tests)
+- **Feed Parser**: RSS 2.0 and Atom parsing, error handling, edge cases
+- **HTML Utilities**: Text conversion, entity decoding, wrapping
+- **Fuzzy Search**: Matching algorithm, ranking, scoring
+- **Keybindings**: Pane navigation, vim sequences, command palette, leader key
+- **Config Loader**: TOML parsing and validation
 
 Tests are co-located with source files (`*.test.ts`) and use fixtures from `test/fixtures/`.
 

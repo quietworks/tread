@@ -12,6 +12,7 @@ export class ArticleView extends BoxRenderable {
 	private article: Article | null = null;
 	private scrollBox: ScrollBoxRenderable;
 	private contentBox: BoxRenderable;
+	private _isFocused = false;
 
 	constructor(ctx: RenderContext, width: number, height: number) {
 		super(ctx, {

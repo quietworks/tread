@@ -35,7 +35,7 @@
 		"test:coverage": "bun test --coverage"
 	},
 	"dependencies": {
-		"@opentui/core": "^0.1.50",
+		"@opentui/core": "^0.1.54",
 		"@opentui/solid": "^0.1.50",
 		"@types/turndown": "^5.0.6",
 		"fast-xml-parser": "^5.3.2",
